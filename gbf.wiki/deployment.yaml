@@ -500,7 +500,6 @@ data:
         'limit' => 5,
     ];
     # $wgSearchType = 'CirrusSearch';
-    $wgDisableSearchUpdate = true;
 
     # CollapsibleVector
     # wfLoadExtension('CollapsibleVector');
