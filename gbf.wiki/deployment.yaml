@@ -491,7 +491,6 @@ data:
     # ElasticSearch
     wfLoadExtension('Elastica');
     wfLoadExtension('CirrusSearch');
-    $wgSearchType = 'CirrusSearch';
     $wgCirrusSearchServers = [ getenv('ES_HOST') ];
     $wgCirrusSearchUseCompletionSuggester = 'yes';
     $wgCirrusSearchCompletionSuggesterSubphrases = [
@@ -500,6 +499,8 @@ data:
         'type' => 'anywords',
         'limit' => 5,
     ];
+    # $wgSearchType = 'CirrusSearch';
+    $wgDisableSearchUpdate = true;
 
     # CollapsibleVector
     # wfLoadExtension('CollapsibleVector');
