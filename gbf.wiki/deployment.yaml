@@ -499,8 +499,8 @@ data:
         'type' => 'anywords',
         'limit' => 5,
     ];
-    # $wgSearchType = 'CirrusSearch';
-    $wgDisableSearchUpdate = true;
+    $wgSearchType = 'CirrusSearch';
+    # $wgDisableSearchUpdate = true;
 
     # CollapsibleVector
     # wfLoadExtension('CollapsibleVector');
