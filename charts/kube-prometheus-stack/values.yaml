@@ -1,5 +1,9 @@
 grafana:
   enabled: true
+  admin:
+    existingSecret: grafana-admin-password
+    userKey: username
+    passwordKey: password
   persistence:
     enabled: true
     type: pvc
