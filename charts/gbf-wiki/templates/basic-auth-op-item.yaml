@@ -1,0 +1,12 @@
+# charts/gbf-wiki/templates/basic-auth-op-item.yaml
+{{- if and .Values.ingress.enabled .Values.ingress.basicAuth.enabled .Values.ingress.basicAuth.secretName }}
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: {{ .Values.ingress.basicAuth.secretName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+spec:
+  itemPath: {{ .Values.ingress.basicAuth.onePasswordItem.path | quote }}
+{{- end -}} 

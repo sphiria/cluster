@@ -1,0 +1,157 @@
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: r2-credentials
+spec:
+  itemPath: "vaults/sphiria/items/r2"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mariadb-backup-r2
+spec:
+  schedule: "0 2 * * *" 
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: mariadb-backup-r2
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: mariadb:11.2
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              DATE=$(date +%Y%m%d_%H%M%S)
+              BACKUP_FILE="mariadb_backup_${DATE}.sql"
+              ARCHIVE_FILE="mariadb_backup_${DATE}.tar.gz"
+
+              echo "Starting MariaDB backup at $(date)"
+
+              apt-get update -qq && apt-get install -y -qq awscli > /dev/null 2>&1
+
+              export AWS_ACCESS_KEY_ID="${R2_ACCESS_KEY}"
+              export AWS_SECRET_ACCESS_KEY="${R2_SECRET_KEY}"
+              export AWS_DEFAULT_REGION="auto"
+              R2_ENDPOINT="https://${R2_USERNAME}.r2.cloudflarestorage.com"
+              R2_BUCKET="${R2_BUCKET_NAME}"
+
+              echo "dumping database..."
+              mariadb-dump -h mariadb -uroot -p${MARIADB_ROOT_PASSWORD} \
+                --all-databases \
+                --single-transaction \
+                --quick \
+                --lock-tables=false \
+                --routines \
+                --triggers \
+                --events \
+                --flush-logs \
+                --master-data=2 > /tmp/${BACKUP_FILE}
+
+              echo "Compressing backup..."
+              tar -czf /tmp/${ARCHIVE_FILE} -C /tmp ${BACKUP_FILE}
+              rm /tmp/${BACKUP_FILE}
+
+              SIZE=$(du -h /tmp/${ARCHIVE_FILE} | cut -f1)
+              echo "Archive created: ${ARCHIVE_FILE} (${SIZE})"
+
+              echo "Uploading to R2: s3://${R2_BUCKET}/db_backups/${ARCHIVE_FILE}"
+              aws s3 cp /tmp/${ARCHIVE_FILE} \
+                s3://${R2_BUCKET}/db_backups/${ARCHIVE_FILE} \
+                --endpoint-url="${R2_ENDPOINT}"
+
+              if aws s3 ls s3://${R2_BUCKET}/db_backups/${ARCHIVE_FILE} --endpoint-url="${R2_ENDPOINT}" > /dev/null 2>&1; then
+                echo "✓ Upload successful"
+              else
+                echo "✗ Upload verification failed"
+                exit 1
+              fi
+
+              rm /tmp/${ARCHIVE_FILE}
+
+              echo "Cleaning up old backups (>7 days)..."
+              CUTOFF_DATE=$(date -d '7 days ago' +%Y%m%d)
+
+              aws s3 ls s3://${R2_BUCKET}/db_backups/ --endpoint-url="${R2_ENDPOINT}" | \
+              while read -r line; do
+                FILE=$(echo $line | awk '{print $4}')
+                if [[ $FILE =~ mariadb_backup_([0-9]{8})_ ]]; then
+                  FILE_DATE="${BASH_REMATCH[1]}"
+                  if [ "$FILE_DATE" -lt "$CUTOFF_DATE" ]; then
+                    echo "Deleting old backup: $FILE"
+                    aws s3 rm s3://${R2_BUCKET}/db_backups/$FILE --endpoint-url="${R2_ENDPOINT}"
+                  fi
+                fi
+              done
+
+              echo "Backup completed successfully at $(date)"
+
+              # List current backups
+              echo "Current backups in R2:"
+              aws s3 ls s3://${R2_BUCKET}/db_backups/ --endpoint-url="${R2_ENDPOINT}" --human-readable
+            env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-root-password
+                  key: root_password
+            - name: R2_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: r2-credentials
+                  key: username
+            - name: R2_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: r2-credentials
+                  key: access_key
+            - name: R2_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: r2-credentials
+                  key: secret_key
+            - name: R2_BUCKET_NAME
+              value: "sphiria"
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mariadb-backup-r2-alerts
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: mariadb-backup-r2
+    interval: 30s
+    rules:
+    - alert: MariaDBBackupR2Failed
+      expr: kube_job_status_failed{job_name=~"mariadb-backup-r2.*"} > 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "MariaDB R2 backup job failed"
+        description: "MariaDB backup to R2 job {{ $labels.job_name }} has failed. Check logs immediately."
+
+    - alert: MariaDBBackupR2NotRun
+      expr: time() - kube_job_status_start_time{job_name=~"mariadb-backup-r2.*"} > 90000
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: "MariaDB R2 backup hasn't run in 25+ hours"
+        description: "Last backup was {{ $value | humanizeDuration }} ago. Expected daily backups."

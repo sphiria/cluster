@@ -1,0 +1,49 @@
+image:
+  tag: "v1.0.0-2"
+
+elasticsearch:
+  enabled: false
+
+wiki:
+  serverUrl: "https://staging.gbf.wiki"
+  uploadPath: "https://staging.gbf.wiki/images"
+  database:
+    name: "mediawiki_staging"
+    onePasswordItem:
+      path: "vaults/sphiria/items/sphiria mediawiki staging"
+      usernameField: "username"
+      passwordField: "password"
+      secretKeyField: "secret-key"
+  secrets:
+    onePasswordItem:
+      path: "vaults/sphiria/items/sphiria mediawiki staging"
+      turnstileSiteKeyField: "turnstile-site-key"
+      turnstileSecretKeyField: "turnstile-secret-key"
+      discordWebhookField: "discord-webhook"
+      cloudflareZoneIdField: "cloudflare-zone-id"
+      cloudflareApiTokenField: "cloudflare-api-token"
+      emailField: "email"
+      emailPasswordField: "email-password"
+  extensions:
+    Discord: false
+    MultiPurge: false
+    Cargo:
+      dbName: "mwcargo_staging"
+
+ingress:
+  hosts:
+    - host: staging.gbf.wiki
+      paths:
+        - path: /
+          pathType: Prefix 
+  certManager:
+    enabled: true
+    issuerName: "letsencrypt-cloudflare-prod"
+  basicAuth:
+    enabled: true
+    secretName: "gbf-wiki-staging-basic-auth"
+    realm: "Staging Access - Authentication Required"
+    onePasswordItem:
+      path: "vaults/sphiria/items/sphiria mediawiki staging basic auth"
+      usernameField: "username"
+      passwordField: "password"

@@ -1,0 +1,41 @@
+persistence:
+  type: pvc
+  enabled: true
+initChownData:
+  enabled: false
+securityContext:
+  runAsUser: 472
+  runAsGroup: 472
+  fsGroup: 472
+  runAsNonRoot: true
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - grafana.sphiria.org
+  tls:
+    - secretName: grafana-tls
+      hosts:
+        - grafana.sphiria.org
+grafana.ini:
+  server:
+    root_url: https://grafana.sphiria.org
+    serve_from_sub_path: false
+  auth.proxy:
+    enabled: true
+    header_name: Cf-Access-Authenticated-User-Email
+    header_property: email
+    auto_sign_up: true
+  users:
+    auto_assign_org_role: Admin
+    allow_sign_up: false
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

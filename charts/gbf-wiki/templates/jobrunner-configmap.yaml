@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}-jobrunner-config
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+data: 
+  jobrunner-conf.json : |
+    {
+      "groups": {
+        "safe": {
+          "runners": 3,
+          "include": [
+            "*"
+          ],
+          "exclude": [
+            "cargoPopulateTable",
+            "cirrusSearchIncomingLinkCount"
+          ],
+          "low-priority": [
+            "cirrusSearchLinksUpdate",
+            "htmlCacheUpdate",
+            "refreshLinks"
+          ]
+        },
+        "unsafe": {
+          "runners": 1,
+          "include": [
+            "cargoPopulateTable",
+            "cirrusSearchIncomingLinkCount"
+          ]
+        }
+      },
+      "limits": {
+        "attempts": {
+          "*": 3
+        },
+        "claimTTL": {
+          "*": 3600
+        },
+        "real": {
+          "*": 300
+        },
+        "memory": {
+          "*": "300M"
+        }
+      },
+      "redis": {
+        "aggregators": [
+          "{{ .Values.wiki.redis.host }}:{{ .Values.wiki.redis.port }}"
+        ],
+        "queues": [
+          "{{ .Values.wiki.redis.host }}:{{ .Values.wiki.redis.port }}"
+        ]
+      },
+      "dispatcher": "php83 /var/www/html/maintenance/run.php runJobs --type=%(type)x --maxtime=%(maxtime)x --memory-limit=%(maxmem)x --result=json"
+    }

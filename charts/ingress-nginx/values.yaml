@@ -1,0 +1,27 @@
+controller:
+  watchIngressWithoutClass: "true"
+  kind: "Deployment"
+  replicaCount: 1
+  hostPort:
+    enabled: true
+    ports:
+      http: 80
+      https: 443
+  updateStrategy:
+    type: Recreate
+  admissionWebhooks:
+    enabled: false
+  service:
+    type: ClusterIP
+  config:
+    "use-forwarded-headers": "true"
+    "compute-full-forwarded-for": "true"
+    #"proxy-real-ip-cidr": "173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32"
+    "log-format-escape-json": "true"
+    "log-format-upstream": '{"time": "$time_iso8601", "remote_addr": "$remote_addr", "x_forwarded_for": "$http_x_forwarded_for", "request_id": "$req_id", "remote_user": "$remote_user", "bytes_sent": $bytes_sent, "request_time": $request_time, "status": $status, "vhost": "$host", "request_proto": "$server_protocol", "path": "$uri", "request_query": "$args", "request_length": $request_length, "duration": $request_time,"method": "$request_method", "http_referrer": "$http_referer", "http_user_agent": "$http_user_agent", "upstream_addr": "$upstream_addr", "upstream_status": "$upstream_status", "upstream_response_time": "$upstream_response_time", "upstream_response_length": "$upstream_response_length", "namespace": "$namespace", "ingress_name": "$ingress_name", "service_name": "$service_name", "service_port": "$service_port"}'
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: kube-prometheus-stack

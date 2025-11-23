@@ -1,0 +1,229 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "gbf-wiki.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.nginxSidecar.enabled }}
+      # Hash the rendered content of the nginx configmap template
+      checksum/config-content: {{ tpl (.Files.Get "templates/nginx-configmap.yaml") . | sha256sum }}
+      # Hash the robots.txt configmap
+      checksum/robots-config: {{ tpl (.Files.Get "templates/robots-configmap.yaml") . | sha256sum }}
+      {{- end }}
+      labels:
+        {{- include "gbf-wiki.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "gbf-wiki.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+      {{- if .Values.nginxSidecar.enabled }}
+      - name: nginx-config-volume
+        configMap:
+          name: {{ include "gbf-wiki.fullname" . }}-nginx-conf
+      # Add volume for robots.txt
+      - name: robots-config-volume
+        configMap:
+          name: {{ include "gbf-wiki.fullname" . }}-robots-config
+      {{- end }}
+      {{- if .Values.webrootVolume.enabled }}
+      - name: webroot-volume
+        {{- if eq .Values.webrootVolume.type "emptyDir" }}
+        emptyDir: {{- toYaml .Values.webrootVolume.emptyDir | nindent 10 }}
+        {{- else if eq .Values.webrootVolume.type "persistentVolumeClaim" }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.webrootVolume.persistentVolumeClaim.claimName | default (printf "%s-webroot" (include "gbf-wiki.fullname" .)) }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.phpFpmContainer.customConfig.enabled }}
+      - name: php-fpm-config-volume
+        configMap:
+          name: {{ include "gbf-wiki.fullname" . }}-{{ .Values.phpFpmContainer.customConfig.configMapNameSuffix }}
+      {{- end }}
+      - name: mediawiki-config-volume # Add volume for LocalSettings.php
+        configMap:
+          name: {{ include "gbf-wiki.fullname" . }}-mediawiki-config # Use the correct ConfigMap name
+      {{- if .Values.uploadsVolume.enabled }}
+      - name: uploads-volume
+        persistentVolumeClaim:
+          claimName: {{ include "gbf-wiki.fullname" . }}-uploads # Use the name of the PVC created by uploads-pvc.yaml
+      {{- end }}
+
+      {{- if and .Values.webrootVolume.enabled (eq .Values.webrootVolume.type "emptyDir") }}
+      initContainers:
+      - name: init-copy-webroot
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        # Use cp -Rp to preserve permissions/timestamps but skip ownership
+        command: ["sh", "-c", "cp -Rp {{ .Values.phpFpmContainer.codeSourcePath }}/. /mnt/webroot-copy-target/"]
+        volumeMounts:
+        - name: webroot-volume
+          # Mount shared volume at temporary path in initContainer
+          mountPath: /mnt/webroot-copy-target
+      {{- end }}
+
+      containers:
+        - name: {{ .Chart.Name }}-fpm
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.database.credentialsSecretName }}
+                  key: {{ .Values.wiki.database.onePasswordItem.usernameField }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.database.credentialsSecretName }}
+                  key: {{ .Values.wiki.database.onePasswordItem.passwordField }}
+            - name: MW_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.database.credentialsSecretName }}
+                  key: {{ .Values.wiki.database.onePasswordItem.secretKeyField }}
+            - name: TURNSTILE_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.turnstileSiteKeyField }}
+            - name: TURNSTILE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.turnstileSecretKeyField }}
+            - name: DISCORD_WEBHOOK
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.discordWebhookField }}
+            - name: CLOUDFLARE_ZONE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.cloudflareZoneIdField }}
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.cloudflareApiTokenField }}
+            - name: EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.emailField }}
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.emailPasswordField }}
+            # Conditionally set ES_HOST if host is set and enabled is not explicitly false
+            {{- if and (ne .Values.elasticsearch.host "") (ne (.Values.elasticsearch.enabled | default true) false) }}
+            - name: ES_HOST
+              value: {{ .Values.elasticsearch.host | quote }}
+            {{- end }}
+            # TODO: Add other necessary environment variables here (e.g., EMAIL)
+            #       These should ideally also be sourced from Secrets or ConfigMaps.
+          ports:
+            - name: fpm
+              containerPort: {{ .Values.service.fpmPort }}
+          # Add livenessProbe, readinessProbe, resources as needed
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: fpm
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: fpm
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.webrootVolume.enabled }}
+            - name: webroot-volume
+              mountPath: {{ .Values.webrootVolume.mountPath }}
+            {{- end }}
+            {{- if .Values.phpFpmContainer.customConfig.enabled }}
+            - name: php-fpm-config-volume
+              mountPath: {{ .Values.phpFpmContainer.customConfig.mountPath }}/www.conf # Mount specific file
+              subPath: www.conf # Use subPath to mount the file, not the directory
+            {{- end }}
+            - name: mediawiki-config-volume # Mount the LocalSettings volume
+              mountPath: {{ .Values.webrootVolume.mountPath }}/LocalSettings.php # Mount into webroot
+              subPath: LocalSettings.php # Mount only the file
+            {{- if .Values.uploadsVolume.enabled }}
+            - name: uploads-volume
+              mountPath: {{ .Values.wiki.uploadDirectory | default "/mnt/uploads" }}
+            {{- end }}
+            # Add other necessary volume mounts for PHP-FPM here
+
+        {{- if .Values.nginxSidecar.enabled }}
+        - name: {{ .Chart.Name }}-nginx
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.nginxSidecar.image.repository }}:{{ .Values.nginxSidecar.image.tag }}"
+          imagePullPolicy: {{ .Values.nginxSidecar.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.nginxPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/conf.d/
+              readOnly: true
+            # Mount robots.txt for Nginx to serve
+            - name: robots-config-volume
+              mountPath: /etc/nginx/custom/robots.txt # Mount the file directly
+              subPath: robots.txt # Use subPath to select the key
+              readOnly: true
+            {{- if .Values.webrootVolume.enabled }}
+            - name: webroot-volume
+              # Mount shared volume at final path in main container
+              mountPath: {{ .Values.webrootVolume.mountPath }}
+              readOnly: true
+            {{- end }}
+            {{- if .Values.uploadsVolume.enabled }}
+            - name: uploads-volume
+              mountPath: {{ .Values.wiki.uploadDirectory | default "/mnt/uploads" }}
+              readOnly: true
+            {{- end }}
+          # Add livenessProbe, readinessProbe, resources for Nginx as needed
+          # livenessProbe:
+          #   tcpSocket:
+          #      port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: / # Nginx default path
+          #     port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }} # Consider separate resources for nginx
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }} 

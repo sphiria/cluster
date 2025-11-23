@@ -1,0 +1,573 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}-mediawiki-config
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+data: 
+  LocalSettings.php : |
+    <?php
+    # Protect against web entry
+    if (!defined('MEDIAWIKI')) {
+        exit;
+    }
+
+    $wgSitename = "{{ .Values.wiki.sitename }}";
+    $wgMetaNamespace = "{{ .Values.wiki.metaNamespace }}";
+    $wgMemoryLimit = '{{ .Values.wiki.memoryLimit }}';
+    $wgRememberMe = "always";
+
+    # uploads
+    $wgMaxUploadSize = {{ .Values.wiki.maxUploadSize }};
+    # Set upload directory based on values.yaml, defaulting to /mnt/uploads
+    $wgUploadDirectory = {{ .Values.wiki.uploadDirectory | default "/mnt/uploads" | quote }};
+
+    # url
+    $wgServer = "{{ .Values.wiki.serverUrl }}";
+    $wgScriptPath = "{{ .Values.wiki.scriptPath }}";
+    $wgUploadPath = "{{ .Values.wiki.uploadPath }}";
+    $wgScriptExtension = "$wgScriptPath/index.php";
+    $wgRedirectScript = "$wgScriptPath/redirect.php";
+    $wgUsePathInfo = true;
+    $actions = array(
+      'edit', 'vedit', 'watch', 'unwatch', 'delete', 'revert', 'rollback',
+      'protect', 'unprotect', 'markpatrolled', 'render', 'submit', 'history', 'purge', 'info'
+    );
+    foreach ($actions as $action) {
+      $wgActionPaths[$action] = "/$1/$action";
+    }
+    $wgActionPaths['view'] = "/$1";
+    $wgArticlePath = $wgActionPaths['view'];
+    $wgResourceBasePath = $wgScriptPath;
+    $wgUrlProtocols = array('http://', 'https://', '//');
+    $wgMainPageIsDomainRoot = true;
+    $wgForceHTTPS = true;
+
+    # assets
+    $wgLogos = [
+      '1x' => "$wgScriptPath{{ index .Values.wiki.logos "1x" }}",
+      'icon' => "$wgScriptPath{{ .Values.wiki.logos.icon }}",
+    ];
+    $wgFavicon = "$wgScriptPath{{ .Values.wiki.favicon }}";
+    $wgAllowUserCss = true;
+    $wgAllowUserJs = true;
+    $wgAllowSiteCSSOnRestrictedPages = true;
+
+    # Email - Sourced from environment variables (Secrets)
+    $wgEnableEmail = true;
+    $wgEnableUserEmail = false; # UPO
+    $wgEmergencyContact = getenv('EMAIL');
+    $wgPasswordSender = getenv('EMAIL');
+    $wgEnotifUserTalk = false; # UPO
+    $wgEnotifWatchlist = false; # UPO
+    $wgEmailAuthentication = true;
+    $wgSMTP = array(
+        'host' => 'ssl://smtp.gmail.com',
+        'IDHost' => parse_url($wgServer, PHP_URL_HOST),
+        'localhost' => parse_url($wgServer, PHP_URL_HOST),
+        'port' => 465,
+        'username' => getenv('EMAIL'),
+        'password' => getenv('EMAIL_PASSWORD'),
+        'auth' => true
+    );
+
+    # db
+    $wgMiserMode = {{ .Values.wiki.database.miserMode }}; # TODO: fix default
+    $wgDBtype = "mysql";
+    $wgDBserver = "{{ .Values.wiki.database.host }}";
+    $wgDBname = "{{ .Values.wiki.database.name }}";
+    $wgDBuser = getenv('DB_USERNAME');
+    $wgDBpassword = getenv('DB_PASSWORD');
+    $wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
+
+    $wgSecretKey = getenv('MW_SECRET_KEY');
+    $wgAuthenticationTokenVersion = "1";
+    $wgFragmentMode = ['html5'];
+
+    # Images
+    $wgEnableUploads = true;
+    $wgUseImageMagick = true;
+    $wgImageMagickConvertCommand = "/usr/bin/convert";
+    $wgShellLocale = "en_US.utf8";
+    $wgUseInstantCommons = false;
+    $wgSharpenParameter = "0x0.5";
+    $wgIgnoreImageErrors = true;
+    $wgMaxImageArea = 10e7;
+    $wgMaxShellFileSize = 402400;
+    $wgMaxShellMemory = 607200;
+    $wgNativeImageLazyLoading = true;
+
+    # Remove export page
+    function removeExportSpecial(&$aSpecialPages)
+    {
+        unset($aSpecialPages['Export']);
+        return true;
+    }
+    $wgHooks['SpecialPage_initList'][] = 'removeExportSpecial';
+
+    # cache
+    $wgObjectCaches['redis'] = [
+        'class' => 'RedisBagOStuff',
+        'servers' => [ "{{ .Values.wiki.redis.host }}:{{ .Values.wiki.redis.port }}" ],
+        'persistent' => true,
+    ];
+    $wgMainCacheType = 'redis';
+    $wgParserCacheType = 'redis';
+    $wgSessionCacheType = 'redis';
+    $wgMainStash = 'redis';
+    $wgEnableSidebarCache = true;
+    $wgUseLocalMessageCache = true;
+    $wgInvalidateCacheOnLocalSettingsChange = false;
+    $wgUseFileCache = false;
+    $wgParserCacheExpireTime = 2592000;
+    $wgObjectCacheSessionExpiry = 3600 * 3;
+
+    # job queue
+    $wgJobRunRate = 0;
+    $wgJobTypeConf['default'] = [
+        'class' => 'JobQueueRedis',
+        'checkDelay' => true,
+        'order' => 'fifo',
+        'redisServer' => "{{ .Values.wiki.redis.host }}:{{ .Values.wiki.redis.port }}",
+        'redisConfig' => [
+            'connectTimeout' => 2,
+            'compression' => 'gzip',
+        ],
+        'claimTTL' => 3600,
+        'daemonized' => true
+    ];
+
+    # Cloudflare
+    $wgUseCdn = true;
+    $wgUsePrivateIPs = true; // Required if K8s service IPs are private
+    $wgCdnServersNoPurge = [
+      {{- range splitList "," .Values.wiki.cloudflareIps }}
+      '{{ . }}',
+      {{- end }}
+    ];
+
+    # locale
+    $wgLanguageCode = "en";
+    $wgLocaltimezone = 'UTC';
+
+    # License
+    $wgRightsPage = ""; # Set to the title of a wiki page that describes your license/copyright
+    $wgRightsUrl = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
+    $wgRightsText = "Creative Commons Attribution-NonCommercial-ShareAlike";
+    $wgRightsIcon = "$wgResourceBasePath/resources/assets/licenses/cc-by-nc-sa.png";
+
+    # Path to the GNU diff3 utility. Used for conflict resolution.
+    $wgDiff3 = "/usr/bin/diff3";
+    $diff2Enabled = extension_loaded( 'wikidiff2' );
+    if ( $diff2Enabled ) {
+      $wgDiffEngine = 'wikidiff2';
+    }
+
+    # Default skin
+    $wgDefaultSkin = "{{ .Values.wiki.defaultSkin }}";
+    wfLoadSkin('Vector');
+    wfLoadSkin('Timeless');
+
+    # Article size
+    $wgMaxArticleSize = {{ .Values.wiki.maxArticleSize }};
+    $wgAPIMaxResultSize = $wgMaxArticleSize * 4096;
+
+    # extensions # TODO: make most of these configurable
+    wfLoadExtension('Cite');
+    wfLoadExtension('Gadgets');
+    wfLoadExtension('ImageMap');
+    wfLoadExtension('InputBox');
+    wfLoadExtension('Interwiki');
+    $wgGroupPermissions['sysop']['interwiki'] = true;
+    wfLoadExtension('Nuke');
+    wfLoadExtension('Poem');
+    wfLoadExtension('SpamBlacklist');
+    wfLoadExtension('MultimediaViewer');
+    wfLoadExtension('TitleBlacklist');
+    wfLoadExtension('WikiEditor');
+    wfLoadExtension('CodeEditor');
+    wfLoadExtension('SyntaxHighlight_GeSHi');
+    wfLoadExtension('CodeMirror');
+    $wgDefaultUserOptions['usecodemirror'] = true;
+
+    {{- if .Values.wiki.extensions.Turnstile }}
+    wfLoadExtensions([ 'ConfirmEdit', 'ConfirmEdit/Turnstile' ]); # TODO: make this configurable
+    $wgTurnstileSiteKey = getenv('TURNSTILE_SITE_KEY');
+    $wgTurnstileSecretKey = getenv('TURNSTILE_SECRET_KEY');
+    $wgGroupPermissions['bot']['skipcaptcha'] = true;
+    $wgGroupPermissions['sysop']['skipcaptcha'] = true;
+    $wgGroupPermissions['autoconfirmed']['skipcaptcha'] = true;
+    $wgGroupPermissions['verified']['skipcaptcha'] = true;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['createtalk'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['edit'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['create'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['addurl'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TOPIC']['edit'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TOPIC']['create'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TOPIC']['addurl'] = false;
+    $wgCaptchaTriggers['edit'] = true;
+    $wgCaptchaTriggers['create'] = true;
+    $wgCaptchaTriggers['createtalk'] = true;
+    $wgCaptchaTriggers['addurl'] = true;
+    $wgCaptchaTriggers['createaccount'] = true;
+    $wgCaptchaTriggers['badlogin'] = true;
+    $ceAllowConfirmedEmail = true;
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.PageImages }}
+    wfLoadExtension('PageImages');
+    $wgPageImagesOpenGraph = false;
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.VipsScaler }}
+    wfLoadExtension('VipsScaler');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.ImportArticles }}
+    wfLoadExtension('ImportArticles');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.ParserFunctions }}
+    wfLoadExtension('ParserFunctions');
+    {{- if and (kindIs "map" .Values.wiki.extensions.ParserFunctions) (hasKey .Values.wiki.extensions.ParserFunctions "enableStringFunctions") }}
+    $wgPFEnableStringFunctions = {{ .Values.wiki.extensions.ParserFunctions.enableStringFunctions }};
+    {{- end }}
+    {{- if and (kindIs "map" .Values.wiki.extensions.ParserFunctions) (hasKey .Values.wiki.extensions.ParserFunctions "stringLengthLimit") }}
+    $wgPFStringLengthLimit = {{ .Values.wiki.extensions.ParserFunctions.stringLengthLimit }};
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Loops }}
+    wfLoadExtension('Loops');
+    {{- if and (kindIs "map" .Values.wiki.extensions.Loops) (hasKey .Values.wiki.extensions.Loops "countLimit") }}
+    $egLoopsCountLimit = {{ .Values.wiki.extensions.Loops.countLimit }};
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.DynamicPageList }}
+    wfLoadExtension("DynamicPageList3");
+    {{- if and (kindIs "map" .Values.wiki.extensions.DynamicPageList) (hasKey .Values.wiki.extensions.DynamicPageList "maxResultCount") }}
+    $wgDplSettings['maxResultCount'] = {{ .Values.wiki.extensions.DynamicPageList.maxResultCount }};
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.TabberNeue }}
+    wfLoadExtension('TabberNeue');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.MsUpload }}
+    wfLoadExtension('MsUpload');
+    $wgFileExtensions = array('png', 'gif', 'jpg', 'jpeg', 'mp3', 'svg', 'webp'); # TODO: make this configurable
+    $wgMSU_useDragDrop = true;
+    $wgMSU_showAutoCat = true;
+    $wgMSU_checkAutoCat = true;
+    $wgMSU_useMsLinks = false;
+    $wgMSU_confirmReplace = true;
+    $wgMSU_imgParams = '400px';
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Arrays }}
+    wfLoadExtension('Arrays');
+    {{- end }}
+
+    # add namespaces  # TODO: make this better?
+    define("NS_RAIDS", 3000);
+    $wgExtraNamespaces[NS_RAIDS] = "Raids";
+    define("NS_RAIDS_TALK", 3001);
+    $wgExtraNamespaces[NS_RAIDS_TALK] = "Raids_talk";
+    define("NS_META", 4000);
+    $wgExtraNamespaces[NS_META] = "Meta";
+    $wgNamespacesWithSubpages[NS_META] = true;
+    define("NS_META_TALK", 4001);
+    $wgExtraNamespaces[NS_META_TALK] = "Meta_talk";
+    define("NS_SCENARIO", 5000);
+    $wgExtraNamespaces[NS_SCENARIO] = "Scenario";
+    define("NS_SCENARIO_TALK", 5001);
+    $wgExtraNamespaces[NS_SCENARIO_TALK] = "Scenario_talk";
+    define("NS_NEWS", 6000);
+    $wgExtraNamespaces[NS_NEWS] = "News";
+    define("NS_NEWS_TALK", 6001);
+    $wgExtraNamespaces[NS_NEWS_TALK] = "News_talk";
+    define("NS_ENEMIES", 7000);
+    $wgExtraNamespaces[NS_ENEMIES] = "Enemies";
+    define("NS_ENEMIES_TALK", 7001);
+    $wgExtraNamespaces[NS_ENEMIES_TALK] = "Enemies_talk";
+    define("NS_SKILLS", 8000);
+    $wgExtraNamespaces[NS_SKILLS] = "Skills";
+    define("NS_SKILLS_TALK", 8001);
+    $wgExtraNamespaces[NS_SKILLS_TALK] = "Skills_talk";
+    define("NS_TROPHIES", 9000);
+    $wgExtraNamespaces[NS_TROPHIES] = "Trophies";
+    define("NS_TROPHIES_TALK", 9001);
+    $wgExtraNamespaces[NS_TROPHIES_TALK] = "Trophies_talk";
+    define("NS_DATA", 10000);
+    $wgExtraNamespaces[NS_DATA] = "Data";
+    define("NS_DATA_TALK", 10001);
+    $wgExtraNamespaces[NS_DATA_TALK] = "Data_talk";
+
+    {{- if .Values.wiki.extensions.Scribunto }}
+    wfLoadExtension('Scribunto');
+    $wgScribuntoDefaultEngine = 'luasandbox';
+    $wgScribuntoEngineConf['luasandbox']['errorFile'] = '/var/log/luasandbox.log'; // TODO: Make configurable?
+    $wgScribuntoEngineConf['luasandbox']['memoryLimit'] = 524288000; // TODO: Make configurable?
+    $wgScribuntoGatherFunctionStats = true;
+    $wgScribuntoUseCodeEditor = true;
+    $wgScribuntoUseGeSHi = true;
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Variables }}
+    wfLoadExtension('Variables');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.VariablesLua }}
+    wfLoadExtension('VariablesLua');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.TemplateSandbox }}
+    wfLoadExtension('TemplateSandbox');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.WikiSEO }}
+    wfLoadExtension('WikiSEO');
+    $wgWikiSeoOverwritePageImage = true;
+    $wgWikiSeoDisableLogoFallbackImage = true;
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.CheckUser }}
+    wfLoadExtension('CheckUser');
+    $wgGroupPermissions['sysop']['checkuser'] = true;
+    $wgGroupPermissions['sysop']['checkuser-log'] = true;
+    $wgGroupPermissions['sysop']['hideuser'] = true;
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Widgets }}
+    wfLoadExtension('Widgets');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.CLDR }}
+    wfLoadExtension('cldr');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Linter }}
+    wfLoadExtension('Linter');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.DiscussionTools }}
+    wfLoadExtension('DiscussionTools');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Echo }}
+    wfLoadExtension('Echo');
+    {{- if and (kindIs "map" .Values.wiki.extensions.Echo) (hasKey .Values.wiki.extensions.Echo "UseJobQueue") }}
+    $wgEchoUseJobQueue = {{ .Values.wiki.extensions.Echo.UseJobQueue }};
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.LabeledSectionTransclusion }}
+    wfLoadExtension('LabeledSectionTransclusion');
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.DeletePagesForGood }}
+    wfLoadExtension('DeletePagesForGood');
+    $wgGroupPermissions['*']['deleteperm'] = false;
+    $wgGroupPermissions['user']['deleteperm'] = false;
+    $wgGroupPermissions['bureaucrat']['deleteperm'] = false;
+    $wgGroupPermissions['sysop']['deleteperm'] = true;
+    $wgDeletePagesForGoodNamespaces = array(
+        'NS_MAIN' => true,
+        'NS_IMAGE' => true,
+        'NS_IMAGE_TALK' => true,
+        'NS_CATEGORY' => true,
+        'NS_CATEGORY_TALK' => true,
+        'NS_TEMPLATE' => true,
+        'NS_TEMPLATE_TALK' => true,
+        'NS_TALK' => true,
+        'NS_USER' => true,
+        'NS_USER_TALK' => true,
+        'NS_FILE' => true,
+        'NS_FILE_TALK' => true,
+        'NS_RAIDS' => true,
+        'NS_RAIDS_TALK' => true,
+        'NS_META' => true,
+        'NS_META_TALK' => true,
+        'NS_SCENARIO' => true,
+        'NS_SCENARIO_TALK' => true,
+        'NS_TOPIC' => true,
+        'NS_NEWS' => true,
+        'NS_NEWS_TALK' => true,
+        'NS_WIDGET' => true,
+        'NS_TROPHIES' => true,
+    );
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Cargo }}
+    {{- $cargoConfig := .Values.wiki.extensions.Cargo }}
+    wfLoadExtension('Cargo');
+    {{- if hasKey $cargoConfig "dbName" }}
+    $wgCargoDBname = "{{ $cargoConfig.dbName }}";
+    {{- end }}
+    {{- if hasKey $cargoConfig "pageDataColumns" }}
+      {{- range $column := $cargoConfig.pageDataColumns }}
+    $wgCargoPageDataColumns[] = '{{ $column }}';
+      {{- end }}
+    {{- end }}
+    {{- if hasKey $cargoConfig "allowedSQLFunctions" }}
+      {{- range $func := $cargoConfig.allowedSQLFunctions }}
+    $wgCargoAllowedSQLFunctions[] = '{{ $func }}';
+      {{- end }}
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.SimpleMathJax }}
+    wfLoadExtension( 'SimpleMathJax' );
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.RegexFunctions }}
+    wfLoadExtension( 'RegexFunctions' );
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.VisualEditor }}
+    wfLoadExtension('VisualEditor');
+    $wgParsoidSettings = [
+        'linting' => true
+    ];
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.TemplateData }}
+    wfLoadExtension( 'TemplateData' );
+    {{- end }}
+
+    {{- if and (ne .Values.elasticsearch.host "") (ne (.Values.elasticsearch.enabled | default true) false) }}
+    wfLoadExtension('Elastica');
+    wfLoadExtension('CirrusSearch');
+    $wgSearchType = 'CirrusSearch';
+    $wgCirrusSearchServers = [ getenv('ES_HOST') ];
+    $wgCirrusSearchUseCompletionSuggester = 'yes';
+    $wgCirrusSearchCompletionSuggesterSubphrases = [
+        'build'  => true,
+        'use' => true,
+        'type' => 'anywords',
+        'limit' => 5,
+    ];
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.EmbedVideo }}
+    wfLoadExtension( 'EmbedVideo' );
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Discord }}
+    wfLoadExtension('Discord');
+    $wgDiscordWebhookURL = [ getenv('DISCORD_WEBHOOK') ];
+    $wgDiscordDisabledHooks = ["ArticleDeleteComplete", "ArticleUndelete", "ArticleRevisionVisibilitySet", "ArticleProtectComplete", "BlockIpComplete", "UnblockUserComplete", "UserGroupsChanged", "FileDeleteComplete", "FileUndeleteComplete", "AfterImportPage", "ArticleMergeComplete"];
+    {{- end }}
+
+
+    {{- if .Values.wiki.extensions.TemplateStyles }}
+    wfLoadExtension('TemplateStyles');
+    $wgTemplateStylesAllowedUrls = [
+      "image" => [
+          "<^{\$wgUploadPath}/>",
+          {{- $templateStylesConfig := .Values.wiki.extensions.TemplateStyles }}
+          {{- if and (kindIs "map" $templateStylesConfig) $templateStylesConfig.allowedUrls $templateStylesConfig.allowedUrls.image }}
+            {{- range $url := $templateStylesConfig.allowedUrls.image }}
+          "{{ $url }}",
+            {{- end }}
+          {{- end }}
+      ],
+    ];
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.MultiPurge }}
+    wfLoadExtension('MultiPurge');
+    $wgMultiPurgeCloudFlareZoneId = getenv('CLOUDFLARE_ZONE_ID');
+    $wgMultiPurgeCloudFlareApiToken = getenv('CLOUDFLARE_API_TOKEN');
+    $wgMultiPurgeEnabledServices = ['cloudflare'];
+    $wgMultiPurgeServiceOrder = ['cloudflare'];
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.RandomSelection }}
+    wfLoadExtension( 'RandomSelection' );
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.DarkMode }}
+    wfLoadExtension( 'DarkMode' );
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.SphiriaTools }}
+    wfLoadExtension( 'SphiriaTools' );
+    {{- end }}
+
+    {{- if .Values.wiki.extensions.Flow }}
+    wfLoadExtension('Flow');
+    $wgNamespaceContentModels[NS_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_USER_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_RAIDS_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_META_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_SCENARIO_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_NEWS_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_ENEMIES_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_SKILLS_TALK] = 'flow-board';
+    $wgNamespacesWithSubpages[3001] = true;
+    $wgNamespacesWithSubpages[4001] = true;
+    $wgNamespacesWithSubpages[5001] = true;
+    $wgNamespacesWithSubpages[6001] = true;
+    $wgNamespacesWithSubpages[7001] = true;
+    $wgNamespacesWithSubpages[8001] = true;
+    $wgGroupPermissions['sysop']['flow-create-board'] = true;
+    {{- end }}
+
+    # permissions
+    # disable creating account with api
+    $wgAPIModules['createaccount'] = 'ApiDisabled';
+    $wgGroupPermissions['editors']['editprotected'] = true;
+    $wgGroupPermissions['editors']['editinterface'] = true;
+    $wgGroupPermissions['sysop']['deletelogentry'] = true;
+    $wgGroupPermissions['sysop']['deleterevision'] = true;
+    $wgGroupPermissions['anime']['editsemiprotected'] = true;
+    $wgAutoConfirmAge = 600;
+    $wgAutoConfirmCount = 0;
+    $wgGroupPermissions['*']['edit'] = false;
+    $wgGroupPermissions['*']['createpage'] = false;
+    $wgGroupPermissions['*']['createtalk'] = false;
+    $wgGroupPermissions['*']['move'] = false;
+    $wgGroupPermissions['*']['reupload'] = false;
+    $wgGroupPermissions['*']['upload'] = false;
+    $wgGroupPermissions['user']['createpage'] = false;
+    $wgGroupPermissions['user']['createtalk'] = false;
+    $wgGroupPermissions['user']['writeapi'] = false;
+    $wgGroupPermissions['user']['move'] = false;
+    $wgGroupPermissions['user']['reupload'] = false;
+    $wgGroupPermissions['user']['upload'] = false;
+    $wgGroupPermissions['autoconfirmed']['createpage'] = true;
+    $wgGroupPermissions['autoconfirmed']['createtalk'] = true;
+    $wgGroupPermissions['autoconfirmed']['writeapi'] = true;
+    $wgGroupPermissions['autoconfirmed']['move'] = true;
+    $wgGroupPermissions['autoconfirmed']['reupload'] = true;
+    $wgGroupPermissions['autoconfirmed']['upload'] = true;
+    $wgGroupPermissions['patrollers']['patrol'] = true;
+    $wgGroupPermissions['patrollers']['autopatrol'] = true;
+    $wgGroupPermissions['autopatrolled']['autopatrol'] = true;
+    $wgGroupPermissions['sysop']['upload_by_url'] = true;
+    $wgGroupPermissions['sysop']['deletelogentry'] = true;
+    $wgGroupPermissions['sysop']['deleterevision'] = true;
+    $wgGroupPermissions['moduleeditor']['editmodules'] = true;
+    $wgGroupPermissions['sysop']['editmodules'] = true;
+    $wgGroupPermissions['user']['purge'] = false;
+    $wgGroupPermissions['sysop']['purge'] = true;
+    $wgNamespaceProtection[828] = ['editmodules'];
+
+    {{- if .Values.wiki.showExceptions }}
+    $wgShowExceptionDetails = true;
+    {{- end }}
+
+{{- /*
+fix this:
+     $wgDBerrorLog = '{{ .Values.wiki.logging.dbErrorLog }}';
+    $wgDebugLogGroups = [
+      'exception' => '{{ .Values.wiki.logging.exceptionLog }}',
+      'cargo' => '{{ .Values.wiki.logging.cargoLog }}',
+      'cargo-detailed' => '{{ .Values.wiki.logging.cargoDetailedLog }}',
+      // Add other groups if needed
+    ];
+    $wgDebugLogFile = '/var/log/nginx/wiki-debug.log'; // General debug log if needed 
+*/ -}}

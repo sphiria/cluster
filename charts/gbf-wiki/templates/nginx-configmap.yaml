@@ -1,0 +1,143 @@
+{{- if .Values.nginxSidecar.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}-nginx-conf
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+data:
+  default.conf: |
+    # Real IP Configuration (Pulled from values.yaml)
+    {{- $realIpCidrs := splitList "," .Values.nginxSidecar.config.realIp.setFrom }}
+    {{- range $cidr := $realIpCidrs }}
+    set_real_ip_from  {{ $cidr }};
+    {{- end }}
+    {{- with .Values.nginxSidecar.config.realIp.internalProxies }}
+    {{- $internalProxies := splitList "," . }}
+    {{- range $cidr := $internalProxies }}
+    set_real_ip_from  {{ $cidr }};
+    {{- end }}
+    {{- end }}
+    real_ip_header    {{ .Values.nginxSidecar.config.realIp.header }};
+    {{- if .Values.nginxSidecar.config.realIp.recursive }}
+    real_ip_recursive on;
+    {{- end }}
+
+    client_max_body_size {{ index .Values.ingress.annotations "nginx.ingress.kubernetes.io/proxy-body-size" | default "15m" }};
+
+    server {
+        listen {{ .Values.service.nginxPort }} default_server;
+        listen [::]:{{ .Values.service.nginxPort }} default_server;
+
+        root {{ .Values.nginxSidecar.config.webRoot }};
+        index index.php index.html index.htm;
+
+        server_name _;
+
+        sendfile off;
+        absolute_redirect off;
+
+        client_body_timeout 12;
+        client_header_timeout 12;
+        keepalive_timeout 15;
+        send_timeout 10;
+        client_body_buffer_size 10K;
+        client_header_buffer_size 1k;
+        large_client_header_buffers 4 4k;
+        client_body_temp_path /tmp/client_temp;
+        proxy_temp_path /tmp/proxy_temp_path;
+        fastcgi_temp_path /tmp/fastcgi_temp;
+        uwsgi_temp_path /tmp/uwsgi_temp;
+        scgi_temp_path /tmp/scgi_temp;
+
+        location = /robots.txt {
+            alias /etc/nginx/custom/robots.txt;
+            log_not_found off;
+            access_log off;
+        }
+
+        location = /favicon.ico {
+            alias {{ printf "%s/favicon.ico" .Values.nginxSidecar.config.webRoot }};
+            log_not_found off;
+            access_log off;
+        }
+
+        location ~ ^/Images/(.*) {
+            return 301 /images/$1;
+        }
+
+        location /images {
+            alias {{ .Values.wiki.uploadDirectory | default "/mnt/uploads" }};
+            location ~ ^/images/thumb/(webp/)?(archive/)?[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ {
+                expires 2h;
+                add_header 'Access-Control-Allow-Origin' '{{ .Values.wiki.serverUrl | replace "https://" "" | replace "http://" "" }}' always;
+                add_header Cache-Control "public, no-transform";
+                add_header X-XSS-Protection "1; mode=block";
+                try_files $uri $uri/ @thumb;
+            }
+        }
+
+        location /rest.php {
+            try_files $uri $uri/ /rest.php?$args;
+            fastcgi_param REQUEST_METHOD $request_method;
+            fastcgi_param QUERY_STRING   $query_string;
+            fastcgi_param CONTENT_TYPE   $content_type;
+            fastcgi_param CONTENT_LENGTH $content_length;
+            fastcgi_param SCRIPT_NAME     /rest.php;
+            fastcgi_param PATH_INFO       $fastcgi_path_info;
+            fastcgi_param SCRIPT_FILENAME {{ .Values.webrootVolume.mountPath }}/rest.php;
+            fastcgi_pass {{ .Values.nginxSidecar.config.fpmHost }}:{{ .Values.nginxSidecar.config.fpmPort }};
+        }
+
+        # main location
+        location / {
+            try_files $uri $uri/ @mediawiki;
+
+            location ~ \.php$ {
+                try_files $uri =404; # Don't execute non-existent PHP files
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME {{ .Values.webrootVolume.mountPath }}$fastcgi_script_name;
+                fastcgi_pass {{ .Values.nginxSidecar.config.fpmHost }}:{{ .Values.nginxSidecar.config.fpmPort }};
+            }
+        }
+
+        # thumbnail handling
+        location @thumb {
+            rewrite ^/images/thumb(?:/archive)?/[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ /thumb.php?f=$1&width=$2; # May need &archived=1 etc.
+            fastcgi_param REQUEST_METHOD $request_method;
+            fastcgi_param QUERY_STRING   $query_string;
+            fastcgi_param CONTENT_TYPE   $content_type;
+            fastcgi_param CONTENT_LENGTH $content_length;
+            fastcgi_param SCRIPT_FILENAME {{ .Values.webrootVolume.mountPath }}/thumb.php;
+            fastcgi_param SCRIPT_NAME     /thumb.php;
+            fastcgi_param PATH_INFO       $fastcgi_path_info;
+            fastcgi_pass {{ .Values.nginxSidecar.config.fpmHost }}:{{ .Values.nginxSidecar.config.fpmPort }};
+        }
+
+        # deny access to PHP files in specific directories
+        location ~* /(?:docs|extensions|includes|cache|languages|maintenance|mw-config|serialized|skins|tests|vendor)/.*\.php$ {
+            deny all;
+        }
+
+        # deny access to hidden dot files/dirs
+        location ~ /\.(?!well-known).* {
+            deny all;
+        }
+
+        # mediawiki
+        location @mediawiki {
+            include fastcgi_params;
+            # Explicitly set SCRIPT_FILENAME to the correct path
+            fastcgi_param SCRIPT_FILENAME {{ .Values.webrootVolume.mountPath }}/index.php;
+            # ALSO explicitly set other common params AFTER include
+            fastcgi_param REQUEST_METHOD $request_method;
+            fastcgi_param QUERY_STRING   $query_string;
+            fastcgi_param CONTENT_TYPE   $content_type;
+            fastcgi_param CONTENT_LENGTH $content_length;
+            fastcgi_param SCRIPT_NAME     /index.php;
+            fastcgi_param PATH_INFO       $fastcgi_path_info;
+            fastcgi_index index.php;
+            fastcgi_pass {{ .Values.nginxSidecar.config.fpmHost }}:{{ .Values.nginxSidecar.config.fpmPort }};
+        }
+    }
+{{- end -}} 

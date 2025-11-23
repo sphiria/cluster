@@ -1,0 +1,29 @@
+{{- if .Values.phpFpmContainer.customConfig.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}-{{ .Values.phpFpmContainer.customConfig.configMapNameSuffix }}
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+data:
+  www.conf: |
+    [global]
+    error_log = /dev/stderr
+
+    [www]
+    listen = 0.0.0.0:{{ .Values.service.fpmPort }};
+    ; Ensure FPM only executes .php files
+    security.limit_extensions = .php
+
+    ; Inherited settings from user's config
+    pm.status_path = /fpm-status
+    pm = static
+    pm.max_children = 200
+    pm.max_requests = 10000
+    pm.process_idle_timeout = 10s
+    clear_env = no
+    catch_workers_output = yes
+    decorate_workers_output = no
+    ping.path = /fpm-ping
+    listen.backlog = 65536
+{{- end -}} 

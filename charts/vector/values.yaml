@@ -1,0 +1,78 @@
+role: Agent
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+podMonitor:
+  enabled: true
+  jobLabel: vector-agent
+  additionalLabels:
+    release: kube-prometheus-stack
+data_dir: /vector-data-dir
+customConfig:
+  api:
+    enabled: true
+    address: 0.0.0.0:8686
+  sources:
+    kubernetes_logs:
+      type: kubernetes_logs
+  transforms:
+      filter_noisy_logs:
+        type: filter
+        inputs:
+          - kubernetes_logs
+        condition: |
+          msg = string(.message) ?? ""
+          !contains(msg, "GET /health") &&
+          !contains(msg, "GET /healthz") &&
+          !contains(msg, "GET /readyz") &&
+          !contains(msg, "GET /livez") &&
+          !contains(msg, "/metrics HTTP")
+      parse_json_logs:
+        type: remap
+        inputs:
+          - filter_noisy_logs
+        source: |
+          parsed, err = parse_json(string!(.message))
+          if err == null {
+            . = merge(., parsed) ?? .
+          }
+      add_loki_labels:
+        type: remap
+        inputs:
+          - parse_json_logs
+        source: |
+          .loki_labels.namespace = .kubernetes.pod_namespace
+          .loki_labels.pod = .kubernetes.pod_name
+          .loki_labels.container = .kubernetes.container_name
+          .loki_labels.node = .kubernetes.pod_node_name
+
+          # Add ingress-specific labels if available
+          if exists(.vhost) {
+            .loki_labels.vhost = .vhost
+          }
+          if exists(.status) {
+            .loki_labels.status = to_string(.status) ?? ""
+          }
+  sinks:
+    loki:
+      type: loki
+      inputs:
+        - add_loki_labels
+      endpoint: http://loki:3100
+      encoding:
+        codec: json
+      labels:
+        namespace: '{{ "{{ .loki_labels.namespace }}" }}'
+        pod: '{{ "{{ .loki_labels.pod }}" }}'
+        container: '{{ "{{ .loki_labels.container }}" }}'
+        node: '{{ "{{ .loki_labels.node }}" }}'
+      remove_label_fields: true
+      healthcheck:
+        enabled: true

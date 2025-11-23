@@ -1,0 +1,21 @@
+{{- if .Values.uploadsVolume.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}-uploads
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.uploadsVolume.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.uploadsVolume.size | quote }}
+  {{- if .Values.uploadsVolume.storageClass }}
+  {{- if (eq "-" .Values.uploadsVolume.storageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: {{ .Values.uploadsVolume.storageClass | quote }}
+  {{- end }}
+  {{- end }}
+{{- end }} 

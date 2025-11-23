@@ -1,0 +1,144 @@
+{{- if .Values.jobrunner.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}-jobrunner
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+    app.kubernetes.io/component: jobrunner
+spec:
+  replicas: {{ .Values.jobrunner.replicaCount | default 1 }} # Default to 1 replica for job runner
+  selector:
+    matchLabels:
+      {{- include "gbf-wiki.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: jobrunner
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }} # Reuse pod annotations if needed
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "gbf-wiki.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: jobrunner
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "gbf-wiki.serviceAccountName" . }} # Reuse the same service account
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }} # Reuse pod security context
+      volumes:
+      # Volume for LocalSettings.php
+      - name: mediawiki-config-volume
+        configMap:
+          name: {{ include "gbf-wiki.fullname" . }}-mediawiki-config
+      # Volume for jobrunner-conf.json
+      - name: jobrunner-config-volume
+        configMap:
+          name: {{ include "gbf-wiki.fullname" . }}-jobrunner-config
+          items:
+            - key: jobrunner-conf.json
+              path: jobrunner-conf.json # The filename inside the volume
+      # {{- if .Values.uploadsVolume.enabled }}
+      # Volume for uploads, if enabled - REMOVED
+      # - name: uploads-volume
+      #   persistentVolumeClaim:
+      #     claimName: {{ include "gbf-wiki.fullname" . }}-uploads
+      # {{- end }}
+      # Add other volumes if the job runner needs them
+
+      containers:
+        - name: {{ .Chart.Name }}-jobrunner
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }} # Reuse container security context
+          # Specify the job runner image - ensure these values exist in values.yaml
+          image: "{{ .Values.jobrunner.image.repository }}:{{ .Values.jobrunner.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.jobrunner.image.pullPolicy | default .Values.image.pullPolicy }}
+          env:
+            # Include required environment variables from secrets
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.database.credentialsSecretName }}
+                  key: {{ .Values.wiki.database.onePasswordItem.usernameField }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.database.credentialsSecretName }}
+                  key: {{ .Values.wiki.database.onePasswordItem.passwordField }}
+            - name: MW_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.database.credentialsSecretName }}
+                  key: {{ .Values.wiki.database.onePasswordItem.secretKeyField }}
+            # Include other secrets needed by job runner tasks
+            - name: TURNSTILE_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.turnstileSiteKeyField }}
+            - name: TURNSTILE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.turnstileSecretKeyField }}
+            - name: DISCORD_WEBHOOK
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.discordWebhookField }}
+            - name: CLOUDFLARE_ZONE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.cloudflareZoneIdField }}
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.cloudflareApiTokenField }}
+            - name: EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.emailField }}
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.wiki.secrets.credentialsSecretName }}
+                  key: {{ .Values.wiki.secrets.onePasswordItem.emailPasswordField }}
+          # Resources for the job runner - configure in values.yaml
+          resources:
+            {{- toYaml .Values.jobrunner.resources | nindent 12 }}
+          volumeMounts:
+            # Mount LocalSettings.php into the container's webroot (adjust path if image differs)
+            - name: mediawiki-config-volume
+              mountPath: {{ .Values.webrootVolume.mountPath | default "/var/www/html" }}/LocalSettings.php # Assuming same webroot structure
+              subPath: LocalSettings.php
+            # Mount jobrunner-conf.json
+            - name: jobrunner-config-volume
+              mountPath: /var/www/html/mediawiki-services-jobrunner/jobrunner-conf.json # Target path in container
+              subPath: jobrunner-conf.json # Mount only this file from the volume
+            # {{- if .Values.uploadsVolume.enabled }}
+            # Mount uploads volume if enabled - REMOVED
+            # - name: uploads-volume
+            #   mountPath: {{ .Values.wiki.uploadDirectory | default "/mnt/uploads" }}
+            # {{- end }}
+            # Add other volume mounts if needed
+
+      # Reuse nodeSelector, affinity, tolerations if desired
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }} 

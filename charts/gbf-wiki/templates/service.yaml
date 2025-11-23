@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gbf-wiki.fullname" . }}
+  labels:
+    {{- include "gbf-wiki.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.nginxPort }} # Service always exposes the Nginx port
+      targetPort: {{ if .Values.nginxSidecar.enabled }}http{{ else }}fpm{{ end }} # Target Nginx or FPM port
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "gbf-wiki.selectorLabels" . | nindent 4 }} 
