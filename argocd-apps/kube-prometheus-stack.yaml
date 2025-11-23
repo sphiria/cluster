@@ -41,3 +41,8 @@ spec:
       kind: Deployment
       jqPathExpressions:
       - .spec.template.spec.containers[]?.resources
+    - group: ""
+      kind: Secret
+      name: kube-prometheus-stack-grafana
+      jsonPointers:
+      - /data/admin-password
