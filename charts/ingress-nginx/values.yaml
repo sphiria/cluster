@@ -9,8 +9,6 @@ controller:
       https: 443
   updateStrategy:
     type: Recreate
-  admissionWebhooks:
-    enabled: false
   service:
     type: ClusterIP
   config:
