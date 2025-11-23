@@ -27,3 +27,10 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: argocd-notifications-secret
+      jsonPointers:
+        - /data
+        - /metadata/annotations/operator.1password.io~1item-version
