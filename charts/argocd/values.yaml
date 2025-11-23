@@ -111,4 +111,4 @@ configs:
     policy.default: role:admin
     scopes: '[email]'
   params:
-    server.insecure: true  # SSL termination handled by nginx ingress
+    server.insecure: true
