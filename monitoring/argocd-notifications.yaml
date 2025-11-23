@@ -1,0 +1,87 @@
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: argocd-notifications-secret
+  namespace: argocd
+spec:
+  itemPath: "vaults/sphiria/items/argocd"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  service.webhook.discord: |
+    url: https://discord.com/api/webhooks/$argocd-notifications-secret:webhook_id/$argocd-notifications-secret:webhook_token
+    headers:
+    - name: Content-Type
+      value: application/json
+
+  template.app-sync-succeeded: |
+    webhook:
+      discord:
+        method: POST
+        body: |
+          {
+            "embeds": [{
+              "title": "✅ Application Synced",
+              "description": "**{{.app.metadata.name}}** synced successfully\n\n📊 **Status:** {{.app.status.sync.status}}\n💚 **Health:** {{.app.status.health.status}}\n🔗 **Repo:** {{.app.spec.source.repoURL}}\n🏷️ **Revision:** {{.app.status.sync.revision}}\n🎯 **Namespace:** {{.app.spec.destination.namespace}}",
+              "color": 3066993,
+              "timestamp": "{{.app.status.operationState.finishedAt}}"
+            }]
+          }
+
+  template.app-sync-failed: |
+    webhook:
+      discord:
+        method: POST
+        body: |
+          {
+            "embeds": [{
+              "title": "❌ Application Sync Failed",
+              "description": "**{{.app.metadata.name}}** failed to sync\n\n📊 **Status:** {{.app.status.sync.status}}\n💔 **Health:** {{.app.status.health.status}}\n🔗 **Repo:** {{.app.spec.source.repoURL}}\n🎯 **Namespace:** {{.app.spec.destination.namespace}}\n⚠️ **Message:** {{.app.status.operationState.message}}",
+              "color": 15158332,
+              "timestamp": "{{.app.status.operationState.finishedAt}}"
+            }]
+          }
+
+  template.app-health-degraded: |
+    webhook:
+      discord:
+        method: POST
+        body: |
+          {
+            "embeds": [{
+              "title": "⚠️ Application Health Degraded",
+              "description": "**{{.app.metadata.name}}** health is degraded\n\n💔 **Health:** {{.app.status.health.status}}\n📊 **Sync:** {{.app.status.sync.status}}\n🎯 **Namespace:** {{.app.spec.destination.namespace}}",
+              "color": 16776960,
+              "timestamp": "{{.time.Now}}"
+            }]
+          }
+
+  trigger.on-sync-succeeded: |
+    - description: Application syncing has succeeded
+      when: app.status.sync.status == 'Synced'
+      send:
+      - app-sync-succeeded
+
+  trigger.on-sync-failed: |
+    - description: Application syncing has failed
+      when: app.status.sync.status == 'Unknown' or app.status.sync.status == 'OutOfSync'
+      send:
+      - app-sync-failed
+
+  trigger.on-health-degraded: |
+    - description: Application has degraded
+      when: app.status.health.status == 'Degraded'
+      send:
+      - app-health-degraded
+
+  subscriptions: |
+    - recipients:
+      - discord
+      triggers:
+      - on-sync-succeeded
+      - on-sync-failed
+      - on-health-degraded
