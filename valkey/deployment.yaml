@@ -17,8 +17,8 @@ metadata:
   name: valkey-config
 data:
   valkey.conf: |
-    maxmemory 5gb
-    maxmemory-policy allkeys-lru
+    maxmemory 4gb
+    maxmemory-policy volatile-lru
     save 900 1
     save 300 10
     save 60 10000
