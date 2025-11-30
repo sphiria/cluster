@@ -607,8 +607,6 @@ data:
 
     wfLoadExtension( 'ParserMigration' );
 
-    $wgShowExceptionDetails = true;
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -754,6 +752,8 @@ kind: Ingress
 metadata:
   name: gbfwiki-ingress
   annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
     nginx.ingress.kubernetes.io/proxy-body-size: 15m
     nginx.ingress.kubernetes.io/forwarded-for-header: "CF-Connecting-IP"
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
