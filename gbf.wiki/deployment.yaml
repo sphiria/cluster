@@ -409,9 +409,6 @@ data:
     # echo
     wfLoadExtension('Echo');
 
-    # DynamicPageList3
-    wfLoadExtension('DynamicPageList3');
-
     # Labeled Section Transclusion
     wfLoadExtension('LabeledSectionTransclusion');
 
