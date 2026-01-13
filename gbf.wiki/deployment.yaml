@@ -629,14 +629,14 @@ spec:
       - name: dockerconfigjson-github-com
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.0
+        image: ghcr.io/sphiria/yuisis:v1.1.4
         imagePullPolicy: Always
         resources:
           limits:
-            memory: "6Gi"
+            memory: "12Gi"
             cpu: "4000m"
           requests:
-            memory: "2Gi"
+            memory: "8Gi"
             cpu: "500m"
         ports:
           - containerPort: 8080
@@ -752,8 +752,8 @@ kind: Ingress
 metadata:
   name: gbfwiki-ingress
   annotations:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-body-size: 15m
     nginx.ingress.kubernetes.io/forwarded-for-header: "CF-Connecting-IP"
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
