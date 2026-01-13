@@ -302,7 +302,7 @@ data:
     $egLoopsCountLimit = 1000;
 
     # DynamicPageList
-    wfLoadExtension("DynamicPageList3");
+    wfLoadExtension('DynamicPageList4');
     $wgDplSettings['maxResultCount'] = 1000;
 
     # TabberNeue
@@ -629,7 +629,7 @@ spec:
       - name: dockerconfigjson-github-com
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.4
+        image: ghcr.io/sphiria/yuisis:v1.1.5
         imagePullPolicy: Always
         resources:
           limits:
