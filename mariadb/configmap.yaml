@@ -5,7 +5,7 @@ metadata:
 data:
   my.cnf: |
     [mysqld]
-    max_connections = 150
+    max_connections = 300
     max_connect_errors = 100000
     max_allowed_packet = 64M
     skip-name-resolve
