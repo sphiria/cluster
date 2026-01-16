@@ -243,7 +243,6 @@ data:
     wfLoadExtension('Gadgets');
     wfLoadExtension('ImageMap');
     wfLoadExtension('InputBox');
-    wfLoadExtension('Interwiki');
     $wgGroupPermissions['sysop']['interwiki'] = true;
     wfLoadExtension('Nuke');
     wfLoadExtension('ParserFunctions');
@@ -263,7 +262,7 @@ data:
     wfLoadExtension('PageImages');
     $wgPageImagesOpenGraph = false;
 
-    wfLoadExtension( 'Thumbro' );
+    # wfLoadExtension( 'Thumbro' );
 
     # Captcha
     wfLoadExtensions([ 'ConfirmEdit', 'ConfirmEdit/Turnstile' ]);
