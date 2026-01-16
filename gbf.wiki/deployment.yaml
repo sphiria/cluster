@@ -341,9 +341,6 @@ data:
     $wgScribuntoUseCodeEditor = true;
     $wgScribuntoUseGeSHi = true;
 
-    # VariablesLua
-    wfLoadExtension('VariablesLua');
-
     # template sandbox
     wfLoadExtension('TemplateSandbox');
 
