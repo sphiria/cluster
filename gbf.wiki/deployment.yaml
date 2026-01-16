@@ -598,7 +598,8 @@ data:
       'cargo-detailed' => '/var/log/nginx/wiki-cargo-detailed.log',
     );
 
-    wfLoadExtension( 'ParserMigration' );
+    # wfLoadExtension( 'ParserMigration' );
+    $wgShowExceptionDetails = true;
 
 ---
 apiVersion: apps/v1
