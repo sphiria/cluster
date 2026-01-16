@@ -263,7 +263,7 @@ data:
     wfLoadExtension('PageImages');
     $wgPageImagesOpenGraph = false;
 
-    wfLoadExtension('VipsScaler');
+    wfLoadExtension( 'Thumbro' );
 
     # Captcha
     wfLoadExtensions([ 'ConfirmEdit', 'ConfirmEdit/Turnstile' ]);
@@ -503,7 +503,7 @@ data:
     # wfLoadExtension('CollapsibleVector');
 
     # EmbedVideo
-    wfLoadExtension("EmbedVideo");
+    # wfLoadExtension("EmbedVideo"); security risk
 
 
     # discord notifications
@@ -626,7 +626,7 @@ spec:
       - name: dockerconfigjson-github-com
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.5
+        image: ghcr.io/sphiria/yuisis:v1.1.6
         imagePullPolicy: Always
         resources:
           limits:
