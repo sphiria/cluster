@@ -262,7 +262,7 @@ data:
     wfLoadExtension('PageImages');
     $wgPageImagesOpenGraph = false;
 
-    wfLoadExtension( 'Thumbro' );
+    # wfLoadExtension( 'Thumbro' );
 
     # Captcha
     wfLoadExtensions([ 'ConfirmEdit', 'ConfirmEdit/Turnstile' ]);
@@ -625,7 +625,7 @@ spec:
       - name: dockerconfigjson-github-com
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.6
+        image: ghcr.io/sphiria/yuisis:v1.1.4
         imagePullPolicy: Always
         resources:
           limits:
