@@ -12,6 +12,7 @@ controller:
   service:
     type: ClusterIP
   config:
+    "use-http2": "false"
     "use-forwarded-headers": "true"
     "compute-full-forwarded-for": "true"
     "worker-connections": "10240"
