@@ -154,7 +154,7 @@ data:
     # cache
     $wgObjectCaches['valkey'] = array(
       'class' => 'RedisBagOStuff',
-      'servers' => array(getenv('REDIS_SERVER')),
+      'servers' => array(getenv('REDIS_HOST')),
       'persistent' => true,
     );
     $wgMainStash = 'valkey';
