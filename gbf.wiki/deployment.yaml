@@ -152,10 +152,11 @@ data:
     $wgHooks['SpecialPage_initList'][] = 'removeExportSpecial';
 
     # cache
-    $wgObjectCaches['valkey'] = [
-        'class' => 'RedisBagOStuff',
-        'servers' => [ getenv('REDIS_HOST') ],
-    ];
+    $wgObjectCaches['valkey'] = array(
+      'class' => 'RedisBagOStuff',
+      'servers' => array(getenv('REDIS_SERVER')),
+      'persistent' => true,
+    );
     $wgMainStash = 'valkey';
     $wgMainCacheType = 'valkey';
     $wgParserCacheType  = 'valkey';
