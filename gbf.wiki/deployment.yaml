@@ -155,8 +155,6 @@ data:
     $wgObjectCaches['valkey'] = [
         'class' => 'RedisBagOStuff',
         'servers' => [ getenv('REDIS_HOST') ],
-        'persistent' => true,
-        'prefix' => 'mobage',
     ];
     $wgMainStash = 'valkey';
     $wgMainCacheType = 'valkey';
