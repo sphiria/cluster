@@ -108,6 +108,8 @@ data:
         'auth' => true
     );
 
+    $wgExternalLinkTarget = '_blank';
+
     # Database settings
     $wgMiserMode = true;
     $wgDBtype = "mysql";
