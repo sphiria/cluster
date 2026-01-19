@@ -52,7 +52,6 @@ data:
     if (!defined('MEDIAWIKI')) {
         exit;
     }
-    $_SERVER['HTTPS'] = 'on';
 
     $wgSitename = "Granblue Fantasy Wiki";
     $wgMetaNamespace = "Granblue_Fantasy_Wiki";
@@ -675,6 +674,7 @@ data:
         fastcgi_buffer_size 32k;
         fastcgi_buffers 16 16k;
         fastcgi_busy_buffers_size 32k;
+        fastcgi_param HTTPS on;
 
         client_body_buffer_size 10K;
         client_header_buffer_size 1k;
