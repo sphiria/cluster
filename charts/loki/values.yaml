@@ -36,7 +36,10 @@ loki:
     retention_enabled: true
     retention_delete_delay: 2h
     delete_request_store: filesystem
-
+chunksCache:
+  allocatedMemory: 1024
+resultsCache:
+  allocatedMemory: 256
 singleBinary:
   replicas: 1
   persistence:
