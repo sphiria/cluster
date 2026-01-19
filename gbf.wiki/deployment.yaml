@@ -52,6 +52,7 @@ data:
     if (!defined('MEDIAWIKI')) {
         exit;
     }
+    $_SERVER['HTTPS'] = 'on';
 
     $wgSitename = "Granblue Fantasy Wiki";
     $wgMetaNamespace = "Granblue_Fantasy_Wiki";
