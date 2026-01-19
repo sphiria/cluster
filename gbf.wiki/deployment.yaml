@@ -160,7 +160,7 @@ data:
     $wgMainStash = 'valkey';
     $wgMainCacheType = 'valkey';
     $wgParserCacheType  = 'valkey';
-    $wgSessionCacheType = CACHE_DB;
+    $wgSessionCacheType = 'valkey';
     $wgLanguageConverterCacheType = 'valkey';
     $wgEnableSidebarCache = true;
     $wgUseLocalMessageCache = true;
