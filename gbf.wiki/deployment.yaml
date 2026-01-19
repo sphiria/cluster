@@ -157,7 +157,7 @@ data:
     ];
     $wgMainCacheType = 'redis';
     $wgParserCacheType = 'redis';
-    $wgSessionCacheType = 'redis';
+    $wgSessionCacheType = CACHE_DB;
     $wgMainStash = 'redis';
     $wgEnableSidebarCache = true;
     $wgUseLocalMessageCache = true;
