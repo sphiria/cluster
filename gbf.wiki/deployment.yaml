@@ -674,7 +674,6 @@ data:
         fastcgi_buffer_size 32k;
         fastcgi_buffers 16 16k;
         fastcgi_busy_buffers_size 32k;
-        fastcgi_param HTTPS on;
 
         client_body_buffer_size 10K;
         client_header_buffer_size 1k;
@@ -736,6 +735,7 @@ data:
                 deny all;
                 include fastcgi_params;
                 fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param HTTPS on;
                 fastcgi_pass unix:/var/run/php-fpm.sock;
             }
 
@@ -743,6 +743,7 @@ data:
                 try_files $uri $uri/ /rest.php?$args;
                 include fastcgi_params;
                 fastcgi_param SCRIPT_FILENAME    $document_root/rest.php;
+                fastcgi_param HTTPS on;
                 fastcgi_pass unix:/var/run/php-fpm.sock;
             }
 
@@ -752,6 +753,7 @@ data:
                     try_files $uri $uri/ =404;
                     include fastcgi_params;
                     fastcgi_pass unix:/var/run/php-fpm.sock;
+                    fastcgi_param HTTPS on;
                     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
                 }
             }
@@ -789,6 +791,7 @@ data:
                 rewrite ^/images/thumb/archive/[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ /thumb.php?f=$1&width=$2&archived=1;
                 include fastcgi_params;
                 fastcgi_param SCRIPT_FILENAME    $document_root/thumb.php;
+                fastcgi_param HTTPS on;
                 fastcgi_pass unix:/var/run/php-fpm.sock;
             }
 
@@ -796,6 +799,7 @@ data:
             location @mediawiki {
                 include fastcgi_params;
                 fastcgi_param SCRIPT_FILENAME    $document_root/index.php;
+                fastcgi_param HTTPS on;
                 fastcgi_pass unix:/var/run/php-fpm.sock;
             }
         }
