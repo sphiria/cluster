@@ -157,7 +157,7 @@ data:
     ];
     $wgMainCacheType = 'redis';
     $wgParserCacheType = 'redis';
-    $wgSessionCacheType = CACHE_DB;
+    $wgSessionCacheType = 'redis';
     $wgMainStash = 'redis';
     $wgEnableSidebarCache = true;
     $wgUseLocalMessageCache = true;
@@ -601,10 +601,8 @@ data:
     $wgDebugLogGroups = array(
       'exception' => '/var/log/nginx/wiki-exception.log',
       'cargo' => '/var/log/nginx/wiki-cargo.log',
-      'cargo-detailed' => '/var/log/nginx/wiki-cargo-detailed.log',
+      'session' => '/var/log/nginx/session.log',
     );
-
-    wfLoadExtension( 'ParserMigration' );
 
   php-fpm.conf: |
     [global]
