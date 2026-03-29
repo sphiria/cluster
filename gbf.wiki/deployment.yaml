@@ -825,7 +825,7 @@ spec:
         resources:
           limits:
             memory: "12Gi"
-            cpu: "8000m"
+            cpu: "12000m"
           requests:
             memory: "8Gi"
             cpu: "500m"
