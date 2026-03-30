@@ -83,7 +83,7 @@ data:
     $wgUrlProtocols = array('http://', 'https://', '//');
     $wgMainPageIsDomainRoot = true;
     $wgForceHTTPS = true;
-    $wgCookieSameSite = 'Strict';
+    $wgCookieSameSite = 'Lax';
     $wgCookieSecure = true;
 
     # assets
