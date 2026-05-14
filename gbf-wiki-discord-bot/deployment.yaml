@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: gbf-wiki-discord-bot
-        image: ghcr.io/sphiria/gbf-wiki-image-uploader-discord-bot:sha-98851ef
+        image: ghcr.io/sphiria/gbf-wiki-image-uploader-discord-bot:sha-465d4be
         imagePullPolicy: Always
         
         envFrom:
