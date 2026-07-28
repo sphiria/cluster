@@ -84,7 +84,7 @@ spec:
             secretKeyRef:
               name: ilsa-secrets
               key: secret-key
-        - name: REDIS_SERVER
+        - name: REDIS_HOST
           valueFrom:
             secretKeyRef:
               name: ilsa-secrets
