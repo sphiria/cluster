@@ -1,0 +1,755 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nier-config
+data: 
+  LocalSettings.php : |
+    <?php
+    # Protect against web entry
+    if (!defined('MEDIAWIKI')) {
+        exit;
+    }
+
+    $wgSitename = "Granblue Fantasy Wiki";
+    $wgMetaNamespace = "Granblue_Fantasy_Wiki";
+
+    $wgMemoryLimit = '1400M';
+    $wgRememberMe = "always";
+
+    # uploads
+    $wgMaxUploadSize = 10485760;
+    $wgUploadDirectory = "/mnt/images";
+
+    # url
+    $wgServer = "https://gbf.wiki";
+    $wgUploadPath = "https://gbf.wiki/images";
+    $wgScriptPath = "";
+    $wgScriptExtension = "$wgScriptPath/index.php";
+    $wgRedirectScript = "$wgScriptPath/redirect.php";
+    $wgUsePathInfo = true;
+    $actions = array(
+      'edit', 'vedit', 'watch', 'unwatch', 'delete', 'revert', 'rollback',
+      'protect', 'unprotect', 'markpatrolled', 'render', 'submit', 'history', 'purge', 'info'
+    );
+    foreach ($actions as $action) {
+      $wgActionPaths[$action] = "/$1/$action";
+    }
+    $wgActionPaths['view'] = "/$1";
+    $wgArticlePath = $wgActionPaths['view'];
+    $wgResourceBasePath = $wgScriptPath;
+    $wgUrlProtocols = array('http://', 'https://', '//');
+    $wgMainPageIsDomainRoot = true;
+    $wgForceHTTPS = true;
+    $wgCookieSameSite = 'Lax';
+    $wgCookieSecure = true;
+
+    # assets
+    $wgLogos = [
+      '1x' => "$wgScriptPath/images/1/18/Vyrnball.png",
+      'icon' => "$wgScriptPath/images/8/88/Gbfwiki_icon.png",
+    ];
+    $wgFavicon = "$wgScriptPath/favicon.ico";
+    # Email
+    $wgEnableEmail = true;
+    $wgEnableUserEmail = false; # UPO
+    $wgEmergencyContact = getenv('EMAIL');
+    $wgPasswordSender = getenv('EMAIL');
+    $wgEnotifUserTalk = false; # UPO
+    $wgEnotifWatchlist = false; # UPO
+    $wgEmailAuthentication = true;
+    $wgSMTP = array(
+        'host' => 'ssl://smtp.gmail.com',
+        'IDHost' => 'gbf.wiki',
+        'localhost' => 'gbf.wiki',
+        'port' => 465,
+        'username' => getenv('EMAIL'),
+        'password' => getenv('EMAIL_PASSWORD'),
+        'auth' => true
+    );
+
+    $wgExternalLinkTarget = '_blank';
+
+    # Database settings
+    $wgMiserMode = true;
+    $wgDBtype = "mysql";
+    $wgDBserver = getenv('DB_HOST');
+    $wgDBname = getenv('DB_NAME');
+    $wgDBuser = getenv('DB_USERNAME');
+    $wgDBpassword = getenv('DB_PASSWORD');
+    $wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
+
+    # Secret key
+    $wgSecretKey = getenv('MW_SECRET_KEY');
+
+    # Changing this will log out all existing sessions.
+    $wgAuthenticationTokenVersion = "1";
+
+    # determines how section IDs should be encoded. 
+    $wgFragmentMode = ['html5'];
+
+    # Images
+    $wgEnableUploads = true;
+    $wgUseImageMagick = true;
+    $wgImageMagickConvertCommand = "/usr/bin/convert";
+    $wgShellLocale = "en_US.utf8";
+    $wgUseInstantCommons = false;
+    $wgSharpenParameter = "0x0.5";
+    $wgIgnoreImageErrors = true;
+    $wgMaxImageArea = 10e7;
+    $wgMaxShellFileSize = 402400;
+    $wgMaxShellMemory = 607200;
+    $wgNativeImageLazyLoading = true;
+
+    # Remove export page
+    function removeExportSpecial(&$aSpecialPages)
+    {
+        unset($aSpecialPages['Export']);
+        return true;
+    }
+    $wgHooks['SpecialPage_initList'][] = 'removeExportSpecial';
+
+    # cache
+    $wgObjectCaches['valkey'] = array(
+      'class' => 'RedisBagOStuff',
+      'servers' => array(getenv('REDIS_HOST')),
+      'persistent' => true,
+    );
+    $wgMainStash = 'valkey';
+    $wgMainCacheType = 'valkey';
+    $wgParserCacheType  = 'valkey';
+    $wgSessionCacheType = 'valkey';
+    $wgLanguageConverterCacheType = 'valkey';
+    $wgEnableSidebarCache = true;
+    $wgUseLocalMessageCache = true;
+    $wgInvalidateCacheOnLocalSettingsChange = false;
+    $wgUseFileCache = false;
+    $wgParserCacheExpireTime = 259200;
+    $wgObjectCacheSessionExpiry = 3600 * 3;
+    $wgSearchSuggestCacheExpiry = 259200;
+
+    # disable job queue and use redis
+    $wgJobRunRate = 0;
+
+    # Disable creating account with api
+    $wgAPIModules['createaccount'] = 'ApiDisabled';
+
+    # Cloudflare
+    $wgUseCdn = true;
+    $wgUsePrivateIPs = true;
+    $wgCdnMaxAge = $wgParserCacheExpireTime;
+    $wgCdnServersNoPurge = [
+      '10.0.0.0/8',
+      '173.245.48.0/20',
+      '103.21.244.0/22',
+      '103.22.200.0/22',
+      '103.31.4.0/22',
+      '141.101.64.0/18',
+      '108.162.192.0/18',
+      '190.93.240.0/20',
+      '188.114.96.0/20',
+      '197.234.240.0/22',
+      '198.41.128.0/17',
+      '162.158.0.0/15',
+      '104.16.0.0/13',
+      '104.24.0.0/14',
+      '172.64.0.0/13',
+      '131.0.72.0/22',
+      '2400:cb00::/32',
+      '2606:4700::/32',
+      '2803:f800::/32',
+      '2405:8100::/32',
+      '2a06:98c0::/29',
+      '2c0f:f248::/32',
+      '2405:b500::/32'
+    ];
+
+    # locale
+    $wgLanguageCode = "en";
+    $wgLocaltimezone = 'UTC';
+
+    # License
+    $wgRightsPage = ""; # Set to the title of a wiki page that describes your license/copyright
+    $wgRightsUrl = "https://creativecommons.org/licenses/by-nc-sa/4.0/";
+    $wgRightsText = "Creative Commons Attribution-NonCommercial-ShareAlike";
+    $wgRightsIcon = "$wgResourceBasePath/resources/assets/licenses/cc-by-nc-sa.png";
+
+    # Path to the GNU diff3 utility. Used for conflict resolution.
+    $wgDiff3 = "/usr/bin/diff3";
+    $diff2Enabled = extension_loaded( 'wikidiff2' );
+    if ( $diff2Enabled ) {
+      $wgDiffEngine = 'wikidiff2';
+    }
+
+    # Default skin
+    $wgDefaultSkin = "vector";
+    wfLoadSkin('Vector');
+    wfLoadSkin('Timeless');
+    $wgAllowSiteCSSOnRestrictedPages = true;
+
+    # Article size
+    $wgMaxArticleSize = 8192;
+    $wgAPIMaxResultSize = $wgMaxArticleSize * 4096;
+
+    # Extensions
+    wfLoadExtension('Cite');
+    wfLoadExtension('Gadgets');
+    wfLoadExtension('ImageMap');
+    wfLoadExtension('InputBox');
+    $wgGroupPermissions['sysop']['interwiki'] = true;
+    wfLoadExtension('Nuke');
+    wfLoadExtension('ParserFunctions');
+    # enable string functions
+    $wgPFEnableStringFunctions = true;
+    wfLoadExtension('Poem');
+    wfLoadExtension('SpamBlacklist');
+    wfLoadExtension('MultimediaViewer');
+    wfLoadExtension('TitleBlacklist');
+    # CodeEditor
+    wfLoadExtension('WikiEditor');
+    wfLoadExtension('CodeEditor');
+    wfLoadExtension('SyntaxHighlight_GeSHi');
+    wfLoadExtension('CodeMirror');
+    $wgDefaultUserOptions['usecodemirror'] = true;
+
+    wfLoadExtension('PageImages');
+    $wgPageImagesOpenGraph = false;
+
+    wfLoadExtension('VipsScaler');
+
+    # Captcha
+    wfLoadExtensions([ 'ConfirmEdit', 'ConfirmEdit/Turnstile' ]);
+    $wgTurnstileSiteKey = getenv('TURNSTILE_SITE_KEY');
+    $wgTurnstileSecretKey = getenv('TURNSTILE_SECRET_KEY');
+    $wgGroupPermissions['bot']['skipcaptcha'] = true; // registered bots
+    $wgGroupPermissions['sysop']['skipcaptcha'] = true;
+    $wgGroupPermissions['autoconfirmed']['skipcaptcha'] = true;
+    $wgGroupPermissions['verified']['skipcaptcha'] = true;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['createtalk'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['edit'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['create'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TALK']['addurl'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TOPIC']['edit'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TOPIC']['create'] = false;
+    $wgCaptchaTriggersOnNamespace['NS_TOPIC']['addurl'] = false;
+    $wgCaptchaTriggers['edit'] = true;
+    $wgCaptchaTriggers['create'] = true;
+    $wgCaptchaTriggers['createtalk'] = true;
+    $wgCaptchaTriggers['addurl'] = true;
+    $wgCaptchaTriggers['createaccount'] = true;
+    $wgCaptchaTriggers['badlogin'] = true;
+    $ceAllowConfirmedEmail = true;
+
+    # ImportArticles
+    wfLoadExtension('ImportArticles');
+
+    # ParserFunction
+    $wgPFStringLengthLimit = 5000;
+
+    # Variables
+    wfLoadExtension('Variables');
+
+    # Loops
+    wfLoadExtension('Loops');
+    $egLoopsCountLimit = 1000;
+
+    # DynamicPageList
+    wfLoadExtension('DynamicPageList4');
+    $wgDplSettings['maxResultCount'] = 1000;
+
+    # TabberNeue
+    wfLoadExtension('TabberNeue');
+    $wgTabberNeueParseTabName = true;
+
+    # Purge
+    $wgGroupPermissions['user']['purge'] = false;
+    $wgGroupPermissions['sysop']['purge'] = true;
+
+    # MsUpload
+    wfLoadExtension('MsUpload');
+    $wgEnableUploads = true;
+    $wgAllowJavaUploads = true;
+    $wgFileExtensions = array('png', 'gif', 'jpg', 'jpeg', 'mp3', 'svg', 'webp');
+    $wgGroupPermissions['user']['upload'] = true;
+    $wgEnableWriteAPI = true;
+    $wgMSU_useDragDrop = true;
+    $wgMSU_showAutoCat = true;
+    $wgMSU_checkAutoCat = true;
+    $wgMSU_useMsLinks = false;
+    $wgMSU_confirmReplace = true;
+    $wgMSU_imgParams = '400px';
+
+    # arrays
+    wfLoadExtension('Arrays');
+
+    $wgAllowUserCss = true;
+    $wgAllowUserJs = true;
+
+    # Scribunto LUA
+    wfLoadExtension('Scribunto');
+    $wgScribuntoDefaultEngine = 'luasandbox';
+    $wgScribuntoEngineConf['luasandbox']['errorFile'] = '/var/log/luasandbox.log';
+    $wgScribuntoEngineConf['luasandbox']['memoryLimit'] = 524288000;
+    $wgScribuntoGatherFunctionStats = true;
+    $wgScribuntoUseCodeEditor = true;
+    $wgScribuntoUseGeSHi = true;
+
+    # VariablesLua
+    wfLoadExtension('VariablesLua');
+
+    # template sandbox
+    wfLoadExtension('TemplateSandbox');
+
+    # add namespaces
+    define("NS_RAIDS", 3000);
+    $wgExtraNamespaces[NS_RAIDS] = "Raids";
+    define("NS_RAIDS_TALK", 3001);
+    $wgExtraNamespaces[NS_RAIDS_TALK] = "Raids_talk";
+    define("NS_META", 4000);
+    $wgExtraNamespaces[NS_META] = "Meta";
+    $wgNamespacesWithSubpages[NS_META] = true;
+    define("NS_META_TALK", 4001);
+    $wgExtraNamespaces[NS_META_TALK] = "Meta_talk";
+    define("NS_SCENARIO", 5000);
+    $wgExtraNamespaces[NS_SCENARIO] = "Scenario";
+    define("NS_SCENARIO_TALK", 5001);
+    $wgExtraNamespaces[NS_SCENARIO_TALK] = "Scenario_talk";
+    define("NS_NEWS", 6000);
+    $wgExtraNamespaces[NS_NEWS] = "News";
+    define("NS_NEWS_TALK", 6001);
+    $wgExtraNamespaces[NS_NEWS_TALK] = "News_talk";
+    define("NS_ENEMIES", 7000);
+    $wgExtraNamespaces[NS_ENEMIES] = "Enemies";
+    define("NS_ENEMIES_TALK", 7001);
+    $wgExtraNamespaces[NS_ENEMIES_TALK] = "Enemies_talk";
+    define("NS_SKILLS", 8000);
+    $wgExtraNamespaces[NS_SKILLS] = "Skills";
+    define("NS_SKILLS_TALK", 8001);
+    $wgExtraNamespaces[NS_SKILLS_TALK] = "Skills_talk";
+    define("NS_TROPHIES", 9000);
+    $wgExtraNamespaces[NS_TROPHIES] = "Trophies";
+    define("NS_TROPHIES_TALK", 9001);
+    $wgExtraNamespaces[NS_TROPHIES_TALK] = "Trophies_talk";
+    define("NS_DATA", 10000);
+    $wgExtraNamespaces[NS_DATA] = "Data";
+    define("NS_DATA_TALK", 10001);
+    $wgExtraNamespaces[NS_DATA_TALK] = "Data_talk";
+
+    # better descriptions
+    wfLoadExtension('WikiSEO');
+    $wgWikiSeoOverwritePageImage = true;
+    $wgWikiSeoDisableLogoFallbackImage = true;
+
+    # CheckUser
+    wfLoadExtension('CheckUser');
+    $wgGroupPermissions['sysop']['checkuser'] = true;
+    $wgGroupPermissions['sysop']['checkuser-log'] = true;
+    $wgGroupPermissions['sysop']['hideuser'] = true;
+
+    # Widgets
+    wfLoadExtension('Widgets');
+
+    # CLDR
+    wfLoadExtension('cldr');
+
+    # Linter
+    wfLoadExtension('Linter');
+
+    # discussion tools
+    wfLoadExtension('DiscussionTools');
+
+    # echo
+    wfLoadExtension('Echo');
+
+    # Labeled Section Transclusion
+    wfLoadExtension('LabeledSectionTransclusion');
+
+    # DeletepagesFFS
+    wfLoadExtension('DeletePagesForGood');
+    $wgGroupPermissions['*']['deleteperm'] = false;
+    $wgGroupPermissions['user']['deleteperm'] = false;
+    $wgGroupPermissions['bureaucrat']['deleteperm'] = false;
+    $wgGroupPermissions['sysop']['deleteperm'] = true;
+    $wgDeletePagesForGoodNamespaces = array(
+        'NS_MAIN' => true,
+        'NS_IMAGE' => true,
+        'NS_IMAGE_TALK' => true,
+        'NS_CATEGORY' => true,
+        'NS_CATEGORY_TALK' => true,
+        'NS_TEMPLATE' => true,
+        'NS_TEMPLATE_TALK' => true,
+        'NS_TALK' => true,
+        'NS_USER' => true,
+        'NS_USER_TALK' => true,
+        'NS_FILE' => true,
+        'NS_FILE_TALK' => true,
+        'NS_RAIDS' => true,
+        'NS_RAIDS_TALK' => true,
+        'NS_META' => true,
+        'NS_META_TALK' => true,
+        'NS_SCENARIO' => true,
+        'NS_SCENARIO_TALK' => true,
+        'NS_TOPIC' => true,
+        'NS_NEWS' => true,
+        'NS_NEWS_TALK' => true,
+        'NS_WIDGET' => true,
+        'NS_TROPHIES' => true,
+    );
+
+    # cargo
+    wfLoadExtension('Cargo');
+    $wgCargoDBname = getenv('DB_CARGO_NAME');
+    $wgCargoPageDataColumns[] = 'categories';
+    $wgCargoPageDataColumns[] = 'creationDate';
+    $wgCargoPageDataColumns[] = 'modificationDate';
+    $wgCargoPageDataColumns[] = 'creator';
+    $wgCargoPageDataColumns[] = 'numRevisions';
+    $wgCargoPageDataColumns[] = 'isRedirect';
+    $wgCargoPageDataColumns[] = 'pageNameOrRedirect';
+    $wgCargoAllowedSQLFunctions[] = 'REPEAT';
+    $wgCargoAllowedSQLFunctions[] = 'REPLACE';
+    $wgCargoAllowedSQLFunctions[] = 'REGEX_REPLACE';
+    $wgCargoAllowedSQLFunctions[] = 'REGEX_SUBSTR';
+    $wgCargoAllowedSQLFunctions[] = 'TRIM';
+    $wgCargoAllowedSQLFunctions[] = 'IN';
+    $wgCargoAllowedSQLFunctions[] = 'GROUP_CONCAT';
+    $wgCargoAllowedSQLFunctions[] = 'FIND_IN_SET';
+    $wgCargoAllowedSQLFunctions[] = 'IF';
+    $wgCargoAllowedSQLFunctions[] = 'IFNULL';
+    $wgCargoAllowedSQLFunctions[] = 'ANY_VALUE';
+    $wgCargoAllowedSQLFunctions[] = 'LENGTH';
+
+    # SimpleMathJax
+    wfLoadExtension('SimpleMathJax');
+
+    # RegexFunctions
+    wfLoadExtension('RegexFunctions');
+
+    # VisualEditor
+    wfLoadExtension('VisualEditor');
+    # $wgDefaultUserOptions['visualeditor-enable'] = 1;
+    # $wgDefaultUserOptions['visualeditor-editor'] = "visualeditor";
+    # $wgHiddenPrefs[] = 'visualeditor-enable';
+    $wgParsoidSettings = [
+        'linting' => true
+    ];
+
+    # TemplateData
+    wfLoadExtension('TemplateData');
+
+    # ElasticSearch
+    wfLoadExtension('Elastica');
+    wfLoadExtension('CirrusSearch');
+    $wgCirrusSearchServers = [ getenv('ES_HOST') ];
+    $wgCirrusSearchUseCompletionSuggester = 'yes';
+    $wgCirrusSearchCompletionSuggesterSubphrases = [
+        'build'  => true,
+        'use' => true,
+        'type' => 'anywords',
+        'limit' => 5,
+    ];
+    $wgSearchType = 'CirrusSearch';
+    # $wgDisableSearchUpdate = true;
+
+    # CollapsibleVector
+    # wfLoadExtension('CollapsibleVector');
+
+    # EmbedVideo
+    wfLoadExtension("EmbedVideo");
+
+
+    # discord notifications
+    wfLoadExtension('Discord');
+    $wgDiscordWebhookURL = [ getenv('DISCORD_WEBHOOK') ];
+    $wgDiscordDisabledHooks = ["ArticleDeleteComplete", "ArticleUndelete", "ArticleRevisionVisibilitySet", "ArticleProtectComplete", "BlockIpComplete", "UnblockUserComplete", "UserGroupsChanged", "FileDeleteComplete", "FileUndeleteComplete", "AfterImportPage", "ArticleMergeComplete"];
+
+    # templatestyles
+    wfLoadExtension('TemplateStyles');
+    $wgTemplateStylesAllowedUrls = [
+      "image" => [
+          "<^https://gbf\\.wiki/images/>"
+      ],
+    ];
+
+    # cloudflare
+    wfLoadExtension('MultiPurge');
+    $wgMultiPurgeCloudFlareZoneId = getenv('CLOUDFLARE_ZONE_ID');
+    $wgMultiPurgeCloudFlareApiToken = getenv('CLOUDFLARE_API_TOKEN');
+    $wgMultiPurgeEnabledServices = ['cloudflare'];
+    $wgMultiPurgeServiceOrder = ['cloudflare'];
+
+    # Flow
+    wfLoadExtension('Flow');
+    $wgNamespaceContentModels[NS_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_USER_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_RAIDS_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_META_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_SCENARIO_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_NEWS_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_ENEMIES_TALK] = 'flow-board';
+    $wgNamespaceContentModels[NS_SKILLS_TALK] = 'flow-board';
+    $wgNamespacesWithSubpages[3001] = true;
+    $wgNamespacesWithSubpages[4001] = true;
+    $wgNamespacesWithSubpages[5001] = true;
+    $wgNamespacesWithSubpages[6001] = true;
+    $wgNamespacesWithSubpages[7001] = true;
+    $wgNamespacesWithSubpages[8001] = true;
+    $wgGroupPermissions['sysop']['flow-create-board'] = true;
+    #$wgExtraNamespaces[2600] = 'Topic';
+    #$wgContentHandlers["flow-board"] = $wgContentHandlers["wikitext"];
+
+    # permissions
+    $wgGroupPermissions['editors']['editprotected'] = true;
+    $wgGroupPermissions['editors']['editinterface'] = true;
+    $wgGroupPermissions['sysop']['deletelogentry'] = true;
+    $wgGroupPermissions['sysop']['deleterevision'] = true;
+    $wgGroupPermissions['anime']['editsemiprotected'] = true;
+    # disable edit with api unless you're confirmed
+    # let's not auto confirm way too early
+    $wgAutoConfirmAge = 600;
+    $wgAutoConfirmCount = 0;
+    # let's revoke create page for user and guest
+    $wgGroupPermissions['*']['edit'] = false;
+    $wgGroupPermissions['*']['createpage'] = false;
+    $wgGroupPermissions['*']['createtalk'] = false;
+    $wgGroupPermissions['*']['move'] = false;
+    $wgGroupPermissions['*']['reupload'] = false;
+    $wgGroupPermissions['*']['upload'] = false;
+    $wgGroupPermissions['user']['createpage'] = false;
+    $wgGroupPermissions['user']['createtalk'] = false;
+    $wgGroupPermissions['user']['writeapi'] = false;
+    $wgGroupPermissions['user']['move'] = false;
+    $wgGroupPermissions['user']['reupload'] = false;
+    $wgGroupPermissions['user']['upload'] = false;
+    # autoconfirmed is allowed to create pages
+    $wgGroupPermissions['autoconfirmed']['createpage'] = true;
+    $wgGroupPermissions['autoconfirmed']['createtalk'] = true;
+    $wgGroupPermissions['autoconfirmed']['writeapi'] = true;
+    $wgGroupPermissions['autoconfirmed']['move'] = true;
+    $wgGroupPermissions['autoconfirmed']['reupload'] = true;
+    $wgGroupPermissions['autoconfirmed']['upload'] = true;
+    $wgGroupPermissions['patrollers']['patrol'] = true;
+    $wgGroupPermissions['patrollers']['autopatrol'] = true;
+    $wgGroupPermissions['sysop']['upload_by_url'] = true;
+    $wgGroupPermissions['sysop']['deletelogentry'] = true;
+    $wgGroupPermissions['sysop']['deleterevision'] = true;
+    $wgGroupPermissions['autopatrolled']['autopatrol'] = true;
+    # restrict module namespaces
+    $wgGroupPermissions['moduleeditor']['editmodules'] = true;
+    $wgGroupPermissions['sysop']['editmodules'] = true;
+    $wgNamespaceProtection[828] = ['editmodules'];
+
+    wfLoadExtension( 'DarkMode' );
+    wfLoadExtension( 'RandomSelection' );
+    #wfLoadExtension( 'OAuth' );
+    #$wgGroupPermissions['user']['mwoauthproposeconsumer'] = true;
+    #$wgGroupPermissions['sysop']['mwoauthviewprivate'] = true;
+    #$wgGroupPermissions['sysop']['mwoauthupdateownconsumer'] = true;
+
+    # replace this with the nicer log provider
+    $wgDBerrorLog = '/var/log/nginx/wiki-dberror.log';
+    $wgDebugLogGroups = array(
+      'exception' => '/var/log/nginx/wiki-exception.log',
+      'cargo' => '/var/log/nginx/wiki-cargo.log',
+      'session' => '/var/log/nginx/session.log',
+    );
+
+  php-fpm.conf: |
+    [global]
+    error_log = /dev/stderr
+
+    [www]
+    listen = /var/run/php-fpm.sock
+    pm.status_path = /fpm-status
+    pm = static
+    pm.max_children = 500
+    pm.max_requests = 10000
+    pm.process_idle_timeout = 10s
+    request_terminate_timeout = 30s
+    clear_env = no
+    catch_workers_output = yes
+    decorate_workers_output = no
+    ping.path = /fpm-ping
+    listen.backlog = 65536
+
+  nginx.conf: |
+    worker_processes auto;
+    error_log stderr warn;
+    pid /run/nginx.pid;
+
+    events {
+        worker_connections 10240;
+        use epoll;
+        multi_accept on;
+    }
+
+    http {
+        include mime.types;
+        default_type application/octet-stream;
+
+        log_format main_res '$remote_addr - $remote_user [$time_local] "$request" '
+        '$status $body_bytes_sent "$http_referer" '
+        '"$http_user_agent" "$http_x_forwarded_for" '
+        '$request_time $upstream_response_time $pipe $upstream_cache_status';
+
+        error_log stderr warn;
+        access_log /dev/stdout main_res;
+
+        tcp_nopush on;
+        tcp_nodelay on;
+        reset_timedout_connection on;
+        server_tokens off;
+        keepalive_requests 100000;
+
+        open_file_cache max=10000 inactive=30s;
+        open_file_cache_valid 60s;
+        open_file_cache_min_uses 2;
+        open_file_cache_errors on;
+
+        gzip on;
+        gzip_disable "msie6";
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_buffers 32 16k;
+        gzip_http_version 1.1;
+        gzip_min_length 250;
+        gzip_types image/jpeg image/bmp image/svg+xml text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript image/x-icon;
+
+        client_body_timeout 30;
+        client_header_timeout 30;
+        keepalive_timeout 290;
+        send_timeout 30;
+        fastcgi_read_timeout 30;
+        fastcgi_buffer_size 32k;
+        fastcgi_buffers 16 16k;
+        fastcgi_busy_buffers_size 32k;
+
+        client_body_buffer_size 10K;
+        client_header_buffer_size 1k;
+        large_client_header_buffers 4 4k;
+        client_max_body_size 15M;
+
+        client_body_temp_path /tmp/client_temp;
+        proxy_temp_path /tmp/proxy_temp_path;
+        fastcgi_temp_path /tmp/fastcgi_temp;
+        uwsgi_temp_path /tmp/uwsgi_temp;
+        scgi_temp_path /tmp/scgi_temp;
+
+        set_real_ip_from  10.0.0.0/8;
+        set_real_ip_from  173.245.48.0/20;
+        set_real_ip_from  103.21.244.0/22;
+        set_real_ip_from  103.22.200.0/22;
+        set_real_ip_from  103.31.4.0/22;
+        set_real_ip_from  141.101.64.0/18;
+        set_real_ip_from  108.162.192.0/18;
+        set_real_ip_from  190.93.240.0/20;
+        set_real_ip_from  188.114.96.0/20;
+        set_real_ip_from  197.234.240.0/22;
+        set_real_ip_from  198.41.128.0/17;
+        set_real_ip_from  162.158.0.0/15;
+        set_real_ip_from  104.16.0.0/13;
+        set_real_ip_from  104.24.0.0/14;
+        set_real_ip_from  172.64.0.0/13;
+        set_real_ip_from  131.0.72.0/22;
+        set_real_ip_from  2400:cb00::/32;
+        set_real_ip_from  2606:4700::/32;
+        set_real_ip_from  2803:f800::/32;
+        set_real_ip_from  2405:8100::/32;
+        set_real_ip_from  2a06:98c0::/29;
+        set_real_ip_from  2c0f:f248::/32;
+        set_real_ip_from  2405:b500::/32;
+        real_ip_header CF-Connecting-IP;
+        real_ip_recursive on;
+
+        server {
+            listen 8080;
+            server_name gbf.wiki;
+            sendfile off;
+            absolute_redirect off;
+
+            root /var/www/html;
+            index index.php;
+
+            location /robots.txt {
+                alias /var/www/html/robots.txt;
+            }
+
+            location /favicon.ico {
+                alias /var/www/html/favicon.ico;
+            }
+
+            location ~ ^/(fpm-status|fpm-ping)$ {
+                access_log off;
+                allow 127.0.0.1;
+                deny all;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param HTTPS on;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+
+            location /rest.php {
+                try_files $uri $uri/ /rest.php?$args;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME    $document_root/rest.php;
+                fastcgi_param HTTPS on;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+
+            location / {
+                try_files $uri $uri/ @mediawiki;
+                location ~ \.php$ {
+                    try_files $uri $uri/ =404;
+                    include fastcgi_params;
+                    fastcgi_pass unix:/var/run/php-fpm.sock;
+                    fastcgi_param HTTPS on;
+                    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                }
+            }
+
+            location ~ ^/Images/(.*) {
+                return 301 /images/$1;
+            }
+
+            location /images {
+                    alias /mnt/images;
+                    sendfile on;
+                    expires 7d;
+                    add_header Cache-Control "public, no-transform";
+                    location ~ ^/images/thumb/(webp/)?(archive/)?[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ {
+                        expires 2h;
+                        add_header 'Access-Control-Allow-Origin' 'gbf.wiki' always;
+                        add_header Cache-Control "public, no-transform";
+                        add_header X-XSS-Protection "1; mode=block";
+                        try_files $uri $uri/ @thumb;
+                    }
+            }
+
+            location ~* /(?:docs|extensions|includes|cache|languages|maintenance|mw-config|serialized|skins|tests|vendor|images)/.*.php$ {
+                deny all;
+            }
+
+            location ~ /.(svn|git|.ht)(/|$) {
+                deny all;
+            }
+
+            # thumbnails
+            location @thumb {
+                rewrite ^/images/thumb/webp/[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ /thumb.php?f=$1&width=$2&archived=1;
+                rewrite ^/images/thumb/[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ /thumb.php?f=$1&width=$2;
+                rewrite ^/images/thumb/archive/[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ /thumb.php?f=$1&width=$2&archived=1;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME    $document_root/thumb.php;
+                fastcgi_param HTTPS on;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+
+            # mediawiki
+            location @mediawiki {
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME    $document_root/index.php;
+                fastcgi_param HTTPS on;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+        }
+    }
