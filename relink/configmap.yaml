@@ -519,6 +519,11 @@ data:
     # SimpleBatchUpload
     wfLoadExtension( 'SimpleBatchUpload' );
 
+    # discord notifications
+    wfLoadExtension('Discord');
+    $wgDiscordWebhookURL = [ getenv('DISCORD_WEBHOOK') ];
+    $wgDiscordDisabledHooks = ["ArticleDeleteComplete", "ArticleUndelete", "ArticleRevisionVisibilitySet", "ArticleProtectComplete", "BlockIpComplete", "UnblockUserComplete", "UserGroupsChanged", "FileDeleteComplete", "FileUndeleteComplete", "AfterImportPage", "ArticleMergeComplete"];
+
   php-fpm.conf: |
     [global]
     error_log = /dev/stderr

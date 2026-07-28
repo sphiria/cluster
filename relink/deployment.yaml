@@ -64,7 +64,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: ilsa-secrets
-              key: email_password
+              key: email-password
         - name: MEDIAWIKI_DB_SERVER
           valueFrom:
             secretKeyRef:
@@ -120,6 +120,11 @@ spec:
             secretKeyRef:
               name: ilsa-secrets
               key: cf-api-token
+        - name: DISCORD_WEBHOOK
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: discord-webhook
       volumes:
       - name: ilsa-config-volume
         configMap:
