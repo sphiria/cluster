@@ -41,6 +41,12 @@ spec:
           - name: ilsa-config-volume
             mountPath: /var/www/html/LocalSettings.php
             subPath: LocalSettings.php
+          - name: ilsa-config-volume
+            mountPath: /etc/php84/php-fpm.d/www.conf
+            subPath: php-fpm.conf
+          - name: ilsa-config-volume
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
           - name: ilsa-jobrunner-volume
             mountPath: /etc/jobrunner/jobrunner.json
             subPath: jobrunner.json
