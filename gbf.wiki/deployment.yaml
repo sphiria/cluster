@@ -173,6 +173,255 @@ spec:
         persistentVolumeClaim:
           claimName: nier-assets-volume-claim
 ---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nier-search-suggester
+  labels:
+    app: nier-search-suggester
+spec:
+  schedule: "0 */12 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app: nier-search-suggester
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+          - name: dockerconfigjson-github-com
+          containers:
+          - name: search-suggester
+            image: ghcr.io/sphiria/yuisis:v1.1.7
+            imagePullPolicy: Always
+            workingDir: /var/www/html
+            command:
+            - php84
+            - -d
+            - memory_limit=1G
+            - extensions/CirrusSearch/maintenance/UpdateSuggesterIndex.php
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "100m"
+              limits:
+                memory: "1536Mi"
+                cpu: "1000m"
+            env:
+            - name: EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: email
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: email_password
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: db_name
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: db_host
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: db_username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: db_password
+            - name: DB_CARGO_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: db_cargo_name
+            - name: MW_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: mw_secret_key
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: redis_host
+            - name: ES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: es_host
+            - name: DISCORD_WEBHOOK
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: discord_webhook
+            - name: CLOUDFLARE_ZONE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: cloudflare_zone_id
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: cloudflare_api_token
+            - name: TURNSTILE_SITE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: turnstile_site_key
+            - name: TURNSTILE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: turnstile_secret_key
+            volumeMounts:
+            - name: nier-config-volume
+              mountPath: /var/www/html/LocalSettings.php
+              subPath: LocalSettings.php
+          volumes:
+          - name: nier-config-volume
+            configMap:
+              name: nier-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nier-jobrunner
+  labels:
+    app: nier-jobrunner
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nier-jobrunner
+  template:
+    metadata:
+      labels:
+        app: nier-jobrunner
+    spec:
+      imagePullSecrets:
+      - name: dockerconfigjson-github-com
+      containers:
+      - name: jobrunner
+        image: ghcr.io/sphiria/yuisis:v1.1.7
+        imagePullPolicy: Always
+        workingDir: /var/www/html
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          while true; do
+            php84 -d memory_limit=512M maintenance/run.php runJobs --maxjobs 25 --maxtime 60
+            sleep 5
+          done
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "768Mi"
+            cpu: "1000m"
+        env:
+        - name: EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: email
+        - name: EMAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: email_password
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: db_name
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: db_host
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: db_username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: db_password
+        - name: DB_CARGO_NAME
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: db_cargo_name
+        - name: MW_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: mw_secret_key
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: redis_host
+        - name: ES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: es_host
+        - name: DISCORD_WEBHOOK
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: discord_webhook
+        - name: CLOUDFLARE_ZONE_ID
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: cloudflare_zone_id
+        - name: CLOUDFLARE_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: cloudflare_api_token
+        - name: TURNSTILE_SITE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: turnstile_site_key
+        - name: TURNSTILE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: turnstile_secret_key
+        volumeMounts:
+        - name: nier-config-volume
+          mountPath: /var/www/html/LocalSettings.php
+          subPath: LocalSettings.php
+      volumes:
+      - name: nier-config-volume
+        configMap:
+          name: nier-config
+---
 apiVersion: v1
 kind: Service
 metadata:
