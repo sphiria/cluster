@@ -180,7 +180,7 @@ metadata:
   labels:
     app: nier-search-suggester
 spec:
-  schedule: "0 */12 * * *"
+  schedule: "*/10 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
