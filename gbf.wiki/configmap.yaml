@@ -180,8 +180,6 @@ data:
       $wgDiffEngine = 'wikidiff2';
     }
 
-    $wgReadOnly = 'Database maintenance';
-
     # Default skin
     $wgDefaultSkin = "vector";
     wfLoadSkin('Vector');
