@@ -62,7 +62,7 @@ spec:
       - name: dockerconfigjson-github-com
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.7
+        image: ghcr.io/sphiria/yuisis:v1.1.8
         imagePullPolicy: Always
         resources:
           limits:
@@ -198,7 +198,7 @@ spec:
           - name: dockerconfigjson-github-com
           containers:
           - name: search-suggester
-            image: ghcr.io/sphiria/yuisis:v1.1.7
+            image: ghcr.io/sphiria/yuisis:v1.1.8
             imagePullPolicy: Always
             workingDir: /var/www/html
             command:
@@ -319,7 +319,7 @@ spec:
       - name: dockerconfigjson-github-com
       containers:
       - name: jobrunner
-        image: ghcr.io/sphiria/yuisis:v1.1.7
+        image: ghcr.io/sphiria/yuisis:v1.1.8
         imagePullPolicy: Always
         workingDir: /var/www/html
         command:
