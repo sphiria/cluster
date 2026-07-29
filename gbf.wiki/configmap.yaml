@@ -204,13 +204,10 @@ data:
     wfLoadExtension('SpamBlacklist');
     wfLoadExtension('MultimediaViewer');
     wfLoadExtension('TitleBlacklist');
-    # CodeEditor
     wfLoadExtension('WikiEditor');
     wfLoadExtension('CodeEditor');
     wfLoadExtension('SyntaxHighlight_GeSHi');
     wfLoadExtension('CodeMirror');
-    $wgDefaultUserOptions['usecodemirror'] = true;
-
     wfLoadExtension('PageImages');
     $wgPageImagesOpenGraph = false;
 
@@ -259,6 +256,7 @@ data:
     # TabberNeue
     wfLoadExtension('TabberNeue');
     $wgTabberNeueParseTabName = true;
+    $wgTabberNeueAddTabPrefix = false;
     $wgTabberNeueEnableAnimation = false;
 
     # Purge
@@ -291,8 +289,25 @@ data:
     $wgScribuntoEngineConf['luasandbox']['errorFile'] = '/var/log/luasandbox.log';
     $wgScribuntoEngineConf['luasandbox']['memoryLimit'] = 524288000;
     $wgScribuntoGatherFunctionStats = true;
-    $wgScribuntoUseCodeEditor = true;
-    $wgScribuntoUseGeSHi = true;
+
+    # codemirror settings
+    $wgDefaultUserOptions['usecodemirror'] = true;
+    $wgCodeMirrorEnabledModes['javascript'] = true;
+    $wgCodeMirrorEnabledModes['json'] = true;
+    $wgCodeMirrorEnabledModes['css'] = true;
+    $wgCodeMirrorEnabledModes['lua'] = true;
+    $wgCodeMirrorEnabledModes['vue'] = true;
+    $wgCodeEditorEnabledModes['javascript'] = false;
+    $wgCodeEditorEnabledModes['json'] = false;
+    $wgCodeEditorEnabledModes['css'] = false;
+    $wgCodeEditorEnabledModes['lua'] = false;
+    $wgCodeEditorEnabledModes['vue'] = false;
+    $wgGadgetsDefinitionsUseCodeEditor = false;
+    $wgGadgetsDefinitionsUseCodeMirror = true;
+    $wgScribuntoUseCodeEditor = false;
+    $wgScribuntoUseCodeMirror = true;
+    $wgTemplateStylesUseCodeEditor = false;
+    $wgTemplateStylesUseCodeMirror = true;
 
     # VariablesLua
     wfLoadExtension('VariablesLua');
