@@ -259,6 +259,7 @@ data:
     # TabberNeue
     wfLoadExtension('TabberNeue');
     $wgTabberNeueParseTabName = true;
+    $wgTabberNeueEnableAnimation = false;
 
     # Purge
     $wgGroupPermissions['user']['purge'] = false;
