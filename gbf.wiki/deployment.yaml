@@ -58,8 +58,6 @@ spec:
       labels:
         app: nier
     spec:
-      imagePullSecrets:
-      - name: dockerconfigjson-github-com
       containers:
       - name: nier
         image: ghcr.io/sphiria/yuisis:v1.1.8
@@ -194,8 +192,6 @@ spec:
             app: nier-search-suggester
         spec:
           restartPolicy: Never
-          imagePullSecrets:
-          - name: dockerconfigjson-github-com
           containers:
           - name: search-suggester
             image: ghcr.io/sphiria/yuisis:v1.1.8
@@ -315,8 +311,6 @@ spec:
       labels:
         app: nier-jobrunner
     spec:
-      imagePullSecrets:
-      - name: dockerconfigjson-github-com
       containers:
       - name: jobrunner
         image: ghcr.io/sphiria/yuisis:v1.1.8

@@ -22,8 +22,6 @@ spec:
       labels:
         app: ilsa
     spec:
-      imagePullSecrets:
-      - name: dockerconfigjson-github-com
       containers:
       - name: ilsa
         image: ghcr.io/sphiria/yuisis:v1.1.8
@@ -144,8 +142,6 @@ spec:
       labels:
         app: ilsa-jobrunner
     spec:
-      imagePullSecrets:
-      - name: dockerconfigjson-github-com
       containers:
       - name: jobrunner
         image: ghcr.io/sphiria/yuisis:v1.1.8
