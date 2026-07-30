@@ -47,9 +47,6 @@ spec:
           - name: ilsa-config-volume
             mountPath: /etc/nginx/nginx.conf
             subPath: nginx.conf
-          - name: ilsa-jobrunner-volume
-            mountPath: /etc/jobrunner/jobrunner.json
-            subPath: jobrunner.json
         lifecycle:
           preStop:
             exec:
@@ -129,9 +126,125 @@ spec:
       - name: ilsa-config-volume
         configMap:
           name: ilsa-config
-      - name: ilsa-jobrunner-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ilsa-jobrunner
+  labels:
+    app: ilsa-jobrunner
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ilsa-jobrunner
+  template:
+    metadata:
+      labels:
+        app: ilsa-jobrunner
+    spec:
+      imagePullSecrets:
+      - name: dockerconfigjson-github-com
+      containers:
+      - name: jobrunner
+        image: ghcr.io/sphiria/yuisis:v1.1.8
+        imagePullPolicy: Always
+        workingDir: /var/www/html
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          while true; do
+            php84 -d memory_limit=512M maintenance/run.php runJobs --maxjobs 25 --maxtime 60
+            sleep 5
+          done
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "768Mi"
+            cpu: "1000m"
+        env:
+        - name: EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: email
+        - name: EMAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: email-password
+        - name: MEDIAWIKI_DB_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: db-host
+        - name: MEDIAWIKI_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: db-name
+        - name: MEDIAWIKI_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: db-user
+        - name: MEDIAWIKI_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: db-password
+        - name: MEDIAWIKI_SECRETKEY
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: secret-key
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: redis-host
+        - name: AWS_S3_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: s3-key
+        - name: AWS_S3_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: s3-secret
+        - name: AWS_S3_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: s3-token
+        - name: CLOUDFLARE_ZONE_ID
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: cf-zone-id
+        - name: CLOUDFLARE_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: cf-api-token
+        - name: DISCORD_WEBHOOK
+          valueFrom:
+            secretKeyRef:
+              name: ilsa-secrets
+              key: discord-webhook
+        volumeMounts:
+        - name: ilsa-config-volume
+          mountPath: /var/www/html/LocalSettings.php
+          subPath: LocalSettings.php
+      volumes:
+      - name: ilsa-config-volume
         configMap:
-          name: jobrunner-config
+          name: ilsa-config
 ---
 apiVersion: v1
 kind: Service
