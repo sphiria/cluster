@@ -251,7 +251,7 @@ data:
 
     # DynamicPageList
     wfLoadExtension('DynamicPageList4');
-    $wgDplSettings['maxResultCount'] = 1000;
+    $wgDPLMaxResultCount = 1000;
 
     # TabberNeue
     wfLoadExtension('TabberNeue');
@@ -265,10 +265,7 @@ data:
 
     # MsUpload
     wfLoadExtension('MsUpload');
-    $wgEnableUploads = true;
-    $wgAllowJavaUploads = true;
     $wgFileExtensions = array('png', 'gif', 'jpg', 'jpeg', 'mp3', 'svg', 'webp');
-    $wgGroupPermissions['user']['upload'] = true;
     $wgEnableWriteAPI = true;
     $wgMSU_useDragDrop = true;
     $wgMSU_showAutoCat = true;
@@ -546,8 +543,6 @@ data:
     $wgGroupPermissions['patrollers']['patrol'] = true;
     $wgGroupPermissions['patrollers']['autopatrol'] = true;
     $wgGroupPermissions['sysop']['upload_by_url'] = true;
-    $wgGroupPermissions['sysop']['deletelogentry'] = true;
-    $wgGroupPermissions['sysop']['deleterevision'] = true;
     $wgGroupPermissions['autopatrolled']['autopatrol'] = true;
     # restrict module namespaces
     $wgGroupPermissions['moduleeditor']['editmodules'] = true;
