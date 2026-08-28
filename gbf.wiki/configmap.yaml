@@ -430,6 +430,7 @@ data:
     $wgCargoAllowedSQLFunctions[] = 'IFNULL';
     $wgCargoAllowedSQLFunctions[] = 'ANY_VALUE';
     $wgCargoAllowedSQLFunctions[] = 'LENGTH';
+    $wgCargoIgnoreBacklinks = true;
 
     # SimpleMathJax
     wfLoadExtension('SimpleMathJax');
