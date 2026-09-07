@@ -430,6 +430,7 @@ data:
     $wgCargoAllowedSQLFunctions[] = 'IF';
     $wgCargoAllowedSQLFunctions[] = 'IFNULL';
     $wgCargoAllowedSQLFunctions[] = 'ANY_VALUE';
+    $wgCargoIgnoreBacklinks = true;
 
     /* 
     TODO: extensions to fix:
