@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: ilsa
-        image: ghcr.io/sphiria/yuisis:v1.1.9
+        image: ghcr.io/sphiria/yuisis:v1.1.10
         imagePullPolicy: Always
         resources:
           limits:
@@ -144,7 +144,7 @@ spec:
     spec:
       containers:
       - name: jobrunner
-        image: ghcr.io/sphiria/yuisis:v1.1.9
+        image: ghcr.io/sphiria/yuisis:v1.1.10
         imagePullPolicy: Always
         workingDir: /var/www/html
         command:
@@ -152,7 +152,7 @@ spec:
         - -ec
         - |
           while true; do
-            php84 -d memory_limit=512M maintenance/run.php runJobs --maxjobs 25 --maxtime 60
+            php84 -d memory_limit=512M maintenance/run.php runJobs --maxjobs 25 --maxtime 60 --memory-limit=512M
             sleep 5
           done
         resources:

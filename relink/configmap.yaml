@@ -99,6 +99,12 @@ data:
 
     # disable job queue and use redis
     $wgJobRunRate = 0;
+    $wgJobTypeConf['default'] = [
+      'class' => \MediaWiki\JobQueue\JobQueueRedis::class,
+      'redisServer' => getenv('REDIS_HOST'),
+      'redisConfig' => [],
+      'daemonized' => true,
+    ];
 
     # Disable creating account with api
     $wgAPIModules['createaccount'] = 'ApiDisabled';
@@ -158,9 +164,6 @@ data:
       return true;
     }
     $wgHooks['SpecialPage_initList'][] = 'removeExportSpecial';
-
-    # disable job queue
-    $wgJobRunRate = 0;
 
     # Cloudflare
     $wgUseCdn = true;
