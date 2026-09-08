@@ -129,6 +129,12 @@ data:
 
     # disable job queue and use redis
     $wgJobRunRate = 0;
+    $wgJobTypeConf['default'] = [
+      'class' => \MediaWiki\JobQueue\JobQueueRedis::class,
+      'redisServer' => getenv('REDIS_HOST'),
+      'redisConfig' => [],
+      'daemonized' => true,
+    ];
 
     # Disable creating account with api
     $wgAPIModules['createaccount'] = 'ApiDisabled';
