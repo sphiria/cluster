@@ -23,7 +23,7 @@ spec:
           automountServiceAccountToken: false
           containers:
           - name: jobchron
-            image: ghcr.io/sphiria/yuisis:v1.1.10
+            image: ghcr.io/sphiria/yuisis:v1.1.11
             imagePullPolicy: Always
             command: ["php84", "-d", "memory_limit=256M", "/opt/jobchron/run.php"]
             resources:

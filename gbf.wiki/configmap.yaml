@@ -467,6 +467,12 @@ data:
         'type' => 'anywords',
         'limit' => 5,
     ];
+    wfLoadExtension('FrauxSearch');
+    $wgFrauxSearchUrl = getenv('MEILI_URL');
+    $wgFrauxSearchApiKey = getenv('MEILI_API_KEY');
+    $wgFrauxSearchTaskApiKey = getenv('MEILI_TASK_API_KEY');
+    $wgFrauxSearchIndex = 'mediawiki';
+
     $wgSearchType = 'CirrusSearch';
     # $wgDisableSearchUpdate = true;
 

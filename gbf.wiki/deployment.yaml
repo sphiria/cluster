@@ -60,7 +60,7 @@ spec:
     spec:
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.10
+        image: ghcr.io/sphiria/yuisis:v1.1.11
         imagePullPolicy: Always
         resources:
           limits:
@@ -133,6 +133,18 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: redis_host
+        - name: MEILI_URL
+          value: http://meilisearch-service:7700
+        - name: MEILI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: meili_api_key
+        - name: MEILI_TASK_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: meili_task_api_key
         - name: ES_HOST
           valueFrom:
             secretKeyRef:
@@ -194,7 +206,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: search-suggester
-            image: ghcr.io/sphiria/yuisis:v1.1.10
+            image: ghcr.io/sphiria/yuisis:v1.1.11
             imagePullPolicy: Always
             workingDir: /var/www/html
             command:
@@ -255,6 +267,18 @@ spec:
                 secretKeyRef:
                   name: nier-secrets
                   key: redis_host
+            - name: MEILI_URL
+              value: http://meilisearch-service:7700
+            - name: MEILI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: meili_api_key
+            - name: MEILI_TASK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: meili_task_api_key
             - name: ES_HOST
               valueFrom:
                 secretKeyRef:
@@ -313,7 +337,7 @@ spec:
     spec:
       containers:
       - name: jobrunner
-        image: ghcr.io/sphiria/yuisis:v1.1.10
+        image: ghcr.io/sphiria/yuisis:v1.1.11
         imagePullPolicy: Always
         workingDir: /var/www/html
         command:
@@ -377,6 +401,18 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: redis_host
+        - name: MEILI_URL
+          value: http://meilisearch-service:7700
+        - name: MEILI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: meili_api_key
+        - name: MEILI_TASK_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: meili_task_api_key
         - name: ES_HOST
           valueFrom:
             secretKeyRef:
