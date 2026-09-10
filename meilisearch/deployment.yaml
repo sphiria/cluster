@@ -1,0 +1,118 @@
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: meilisearch-secrets
+spec:
+  itemPath: "vaults/sphiria/items/meilisearch"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: meilisearch-pv-claim
+  labels:
+    app: meilisearch
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: meilisearch-service
+spec:
+  type: ClusterIP
+  selector:
+    app: meilisearch
+  ports:
+    - name: http
+      port: 7700
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meilisearch
+  labels:
+    app: meilisearch
+spec:
+  revisionHistoryLimit: 3
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: meilisearch
+  template:
+    metadata:
+      labels:
+        app: meilisearch
+    spec:
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+        - name: meilisearch
+          image: getmeili/meilisearch:v1.15.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 7700
+          env:
+            - name: MEILI_ENV
+              value: production
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: meilisearch-secrets
+                  key: master_key
+            - name: MEILI_HTTP_ADDR
+              value: "0.0.0.0:7700"
+            - name: MEILI_DB_PATH
+              value: /meili_data/data.ms
+            - name: MEILI_NO_ANALYTICS
+              value: "true"
+            - name: MEILI_MAX_INDEXING_THREADS
+              value: "4"
+            - name: MEILI_MAX_INDEXING_MEMORY
+              value: 1GiB
+            - name: MEILI_HTTP_PAYLOAD_SIZE_LIMIT
+              value: 20MiB
+          resources:
+            limits:
+              memory: "8Gi"
+              cpu: "4000m"
+            requests:
+              memory: "4Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: meilisearch-data
+              mountPath: /meili_data
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
+      volumes:
+        - name: meilisearch-data
+          persistentVolumeClaim:
+            claimName: meilisearch-pv-claim
