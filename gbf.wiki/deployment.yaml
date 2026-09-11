@@ -326,7 +326,7 @@ metadata:
     app: nier-jobrunner
 spec:
   revisionHistoryLimit: 3
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: nier-jobrunner
