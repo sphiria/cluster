@@ -60,7 +60,7 @@ spec:
     spec:
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.12
+        image: ghcr.io/sphiria/yuisis:v1.1.14
         imagePullPolicy: Always
         resources:
           limits:
@@ -190,7 +190,6 @@ metadata:
   labels:
     app: nier-search-suggester
 spec:
-  suspend: true
   schedule: "*/10 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
@@ -207,7 +206,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: search-suggester
-            image: ghcr.io/sphiria/yuisis:v1.1.12
+            image: ghcr.io/sphiria/yuisis:v1.1.14
             imagePullPolicy: Always
             workingDir: /var/www/html
             command:
@@ -338,7 +337,7 @@ spec:
     spec:
       containers:
       - name: jobrunner
-        image: ghcr.io/sphiria/yuisis:v1.1.12
+        image: ghcr.io/sphiria/yuisis:v1.1.14
         imagePullPolicy: Always
         workingDir: /var/www/html
         command:

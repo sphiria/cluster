@@ -217,7 +217,7 @@ data:
     wfLoadExtension('PageImages');
     $wgPageImagesOpenGraph = false;
 
-    wfLoadExtension('VipsScaler');
+    wfLoadExtension('Thumbro');
 
     # Captcha
     wfLoadExtensions([ 'ConfirmEdit', 'ConfirmEdit/Turnstile' ]);
@@ -472,9 +472,9 @@ data:
     $wgFrauxSearchApiKey = getenv('MEILI_API_KEY');
     $wgFrauxSearchTaskApiKey = getenv('MEILI_TASK_API_KEY');
     $wgFrauxSearchIndex = 'mediawiki';
-    $wgSearchType = 'FrauxSearch\\FrauxSearchEngine';
+    # $wgSearchType = 'FrauxSearch';
 
-    # $wgSearchType = 'CirrusSearch';
+    $wgSearchType = 'CirrusSearch';
     # $wgDisableSearchUpdate = true;
 
     # CollapsibleVector

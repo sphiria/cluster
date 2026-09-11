@@ -374,7 +374,7 @@ data:
     wfLoadExtension('TemplateSandbox');
 
     # VipsScaler - 3rd party extension
-    wfLoadExtension('VipsScaler');
+    wfLoadExtension('Thumbro');
 
     # WikiSEO - 3rd party extension
     wfLoadExtension('WikiSEO');
