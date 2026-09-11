@@ -217,7 +217,7 @@ data:
     wfLoadExtension('PageImages');
     $wgPageImagesOpenGraph = false;
 
-    wfLoadExtension('Thumbro');
+    wfLoadExtension('VipsScaler');
 
     # Captcha
     wfLoadExtensions([ 'ConfirmEdit', 'ConfirmEdit/Turnstile' ]);
