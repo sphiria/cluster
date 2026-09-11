@@ -472,8 +472,9 @@ data:
     $wgFrauxSearchApiKey = getenv('MEILI_API_KEY');
     $wgFrauxSearchTaskApiKey = getenv('MEILI_TASK_API_KEY');
     $wgFrauxSearchIndex = 'mediawiki';
+    $wgSearchType = 'FrauxSearch\\FrauxSearchEngine';
 
-    $wgSearchType = 'CirrusSearch';
+    # $wgSearchType = 'CirrusSearch';
     # $wgDisableSearchUpdate = true;
 
     # CollapsibleVector
