@@ -353,7 +353,7 @@ data:
 
     # TabberNeue
     wfLoadExtension('TabberNeue');
-    $wgTabberNeueEnableAnimation = true;
+    $wgTabberNeueEnableAnimation = false;
 
     # AWS - 3rd party extension
     if (getenv('AWS_S3_SECRET')) {
