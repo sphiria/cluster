@@ -496,6 +496,7 @@ data:
           "<^https://gbf\\.wiki/images/>"
       ],
     ];
+    wfLoadExtension('TemplateStylesExtender');
 
     # cloudflare
     wfLoadExtension('MultiPurge');
