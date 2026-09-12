@@ -1,3 +1,10 @@
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: gbf-wiki-discord-bot-secrets
+spec:
+  itemPath: "vaults/sphiria/items/gbf-wiki-discord-bot"
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -24,14 +31,58 @@ spec:
     spec:
       containers:
       - name: gbf-wiki-discord-bot
-        image: ghcr.io/sphiria/gbf-wiki-image-uploader-discord-bot:sha-bf9a81b
+        image: ghcr.io/sphiria/gbf-wiki-image-uploader-discord-bot:sha-f908a16
         imagePullPolicy: Always
         
         envFrom:
-        - secretRef:
-            name: gbf-wiki-discord-bot-secrets
         - configMapRef:
             name: gbf-wiki-discord-bot-config
+        env:
+        - name: DISCORD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: DISCORD_TOKEN
+        - name: GUILD_ID
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: GUILD_ID
+        - name: PROXY_URL
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: PROXY_URL
+        - name: USER_AGENT
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: USER_AGENT
+        - name: WIKI_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: WIKI_PASSWORD
+        - name: WIKI_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: WIKI_USERNAME
+        - name: R2_ENDPOINT_URL
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: R2_ENDPOINT_URL
+        - name: R2_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: R2_BUCKET
+        - name: R2_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: gbf-wiki-discord-bot-secrets
+              key: R2_API_TOKEN
         
         resources:
           requests:
