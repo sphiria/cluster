@@ -461,6 +461,7 @@ data:
     wfLoadExtension('CirrusSearch');
     $wgCirrusSearchServers = [ getenv('ES_HOST') ];
     $wgCirrusSearchUseCompletionSuggester = 'yes';
+    $wgCirrusSearchCompletionSettings = 'fuzzy-subphrases';
     $wgCirrusSearchCompletionSuggesterSubphrases = [
         'build'  => true,
         'use' => true,
