@@ -133,18 +133,6 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: redis_host
-        - name: MEILI_URL
-          value: http://meilisearch-service:7700
-        - name: MEILI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: nier-secrets
-              key: meili_api_key
-        - name: MEILI_TASK_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: nier-secrets
-              key: meili_task_api_key
         - name: ES_HOST
           valueFrom:
             secretKeyRef:
@@ -267,18 +255,6 @@ spec:
                 secretKeyRef:
                   name: nier-secrets
                   key: redis_host
-            - name: MEILI_URL
-              value: http://meilisearch-service:7700
-            - name: MEILI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: nier-secrets
-                  key: meili_api_key
-            - name: MEILI_TASK_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: nier-secrets
-                  key: meili_task_api_key
             - name: ES_HOST
               valueFrom:
                 secretKeyRef:
@@ -401,18 +377,6 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: redis_host
-        - name: MEILI_URL
-          value: http://meilisearch-service:7700
-        - name: MEILI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: nier-secrets
-              key: meili_api_key
-        - name: MEILI_TASK_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: nier-secrets
-              key: meili_task_api_key
         - name: ES_HOST
           valueFrom:
             secretKeyRef:
