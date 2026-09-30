@@ -357,6 +357,43 @@ data:
     wfLoadExtension('WikiSEO');
     $wgWikiSeoOverwritePageImage = false;
     $wgWikiSeoDisableLogoFallbackImage = true;
+    $wgHooks['ContentAlterParserOutput'][] = static function ( $content, $title, $output ) {
+        if ( !$title->inNamespace( NS_MAIN ) || $content->isRedirect() ) {
+            return;
+        }
+
+        $categories = $output->getCategoryNames();
+        $suffixes = [
+            'Characters' => ' iconA.jpg',
+            'Weapons' => ' icon.jpg',
+            'Summons' => ' icon.jpg',
+        ];
+
+        foreach ( $suffixes as $category => $suffix ) {
+            if ( !in_array( $category, $categories, true ) ) {
+                continue;
+            }
+
+            $services = \MediaWiki\MediaWikiServices::getInstance();
+            $iconTitle = $services->getTitleFactory()->makeTitleSafe(
+                NS_FILE, $title->getText() . $suffix
+            );
+            if ( !$iconTitle ) {
+                return;
+            }
+
+            $output->addImage( $iconTitle->getDBkey() );
+            $file = $services->getRepoGroup()->findFile( $iconTitle );
+            if ( !$file ) {
+                return;
+            }
+
+            $output->addImage( $file->getName(), $file->getTimestamp(), $file->getSha1() );
+            $output->setPageProperty( 'page_image_free', $file->getName() );
+            $output->unsetPageProperty( 'page_image' );
+            return;
+        }
+    };
 
     # CheckUser
     wfLoadExtension('CheckUser');
