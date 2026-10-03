@@ -528,25 +528,19 @@ data:
     $wgMultiPurgeCloudFlareApiToken = getenv('CLOUDFLARE_API_TOKEN');
     $wgMultiPurgeEnabledServices = ['cloudflare'];
     $wgMultiPurgeServiceOrder = ['cloudflare'];
+    $wgMultiPurgeRunInQueue = true;
+    $wgMultiPurgeWarmParserCacheOnRefreshLinks = true;
 
     # Flow
     wfLoadExtension('Flow');
-    $wgNamespaceContentModels[NS_TALK] = 'flow-board';
-    $wgNamespaceContentModels[NS_USER_TALK] = 'flow-board';
-    $wgNamespaceContentModels[NS_RAIDS_TALK] = 'flow-board';
-    $wgNamespaceContentModels[NS_META_TALK] = 'flow-board';
-    $wgNamespaceContentModels[NS_SCENARIO_TALK] = 'flow-board';
-    $wgNamespaceContentModels[NS_NEWS_TALK] = 'flow-board';
-    $wgNamespaceContentModels[NS_ENEMIES_TALK] = 'flow-board';
-    $wgNamespaceContentModels[NS_SKILLS_TALK] = 'flow-board';
     $wgNamespacesWithSubpages[3001] = true;
     $wgNamespacesWithSubpages[4001] = true;
     $wgNamespacesWithSubpages[5001] = true;
     $wgNamespacesWithSubpages[6001] = true;
     $wgNamespacesWithSubpages[7001] = true;
     $wgNamespacesWithSubpages[8001] = true;
-    $wgGroupPermissions['sysop']['flow-create-board'] = true;
-    $wgFlowReadOnly = false;
+    $wgFlowReadOnly = true;
+    $wgFlowEnableOptInBetaFeature = false;
 
     # permissions
     $wgGroupPermissions['editors']['editprotected'] = true;
