@@ -504,6 +504,9 @@ data:
     $wgSearchType = 'CirrusSearch';
     # $wgDisableSearchUpdate = true;
 
+    # AdvancedSearch
+    wfLoadExtension('AdvancedSearch');
+
     # EmbedVideo
     wfLoadExtension("EmbedVideo");
 
@@ -531,16 +534,13 @@ data:
     $wgMultiPurgeRunInQueue = true;
     $wgMultiPurgeWarmParserCacheOnRefreshLinks = true;
 
-    # Flow
-    wfLoadExtension('Flow');
+    # talk subpages
     $wgNamespacesWithSubpages[3001] = true;
     $wgNamespacesWithSubpages[4001] = true;
     $wgNamespacesWithSubpages[5001] = true;
     $wgNamespacesWithSubpages[6001] = true;
     $wgNamespacesWithSubpages[7001] = true;
     $wgNamespacesWithSubpages[8001] = true;
-    $wgFlowReadOnly = true;
-    $wgFlowEnableOptInBetaFeature = false;
 
     # permissions
     $wgGroupPermissions['editors']['editprotected'] = true;
