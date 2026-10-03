@@ -211,7 +211,6 @@ data:
     wfLoadExtension('MultimediaViewer');
     wfLoadExtension('TitleBlacklist');
     wfLoadExtension('WikiEditor');
-    wfLoadExtension('CodeEditor');
     wfLoadExtension('SyntaxHighlight_GeSHi');
     wfLoadExtension('CodeMirror');
     wfLoadExtension('PageImages');
@@ -305,11 +304,8 @@ data:
     $wgCodeEditorEnabledModes['css'] = false;
     $wgCodeEditorEnabledModes['lua'] = false;
     $wgCodeEditorEnabledModes['vue'] = false;
-    $wgGadgetsDefinitionsUseCodeEditor = false;
     $wgGadgetsDefinitionsUseCodeMirror = true;
-    $wgScribuntoUseCodeEditor = false;
     $wgScribuntoUseCodeMirror = true;
-    $wgTemplateStylesUseCodeEditor = false;
     $wgTemplateStylesUseCodeMirror = true;
 
     # VariablesLua
@@ -508,9 +504,6 @@ data:
     $wgSearchType = 'CirrusSearch';
     # $wgDisableSearchUpdate = true;
 
-    # CollapsibleVector
-    # wfLoadExtension('CollapsibleVector');
-
     # EmbedVideo
     wfLoadExtension("EmbedVideo");
 
@@ -553,8 +546,7 @@ data:
     $wgNamespacesWithSubpages[7001] = true;
     $wgNamespacesWithSubpages[8001] = true;
     $wgGroupPermissions['sysop']['flow-create-board'] = true;
-    #$wgExtraNamespaces[2600] = 'Topic';
-    #$wgContentHandlers["flow-board"] = $wgContentHandlers["wikitext"];
+    $wgFlowReadOnly = false;
 
     # permissions
     $wgGroupPermissions['editors']['editprotected'] = true;
