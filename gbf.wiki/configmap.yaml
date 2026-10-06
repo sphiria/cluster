@@ -126,7 +126,7 @@ data:
     $wgParserCacheExpireTime = 259200;
     $wgObjectCacheSessionExpiry = 3600 * 3;
     $wgSearchSuggestCacheExpiry = 259200;
-    $wgCacheEpoch = 20261004034041;
+    $wgCacheEpoch = 20261007000339;
 
     # disable job queue and use redis
     $wgJobRunRate = 0;
