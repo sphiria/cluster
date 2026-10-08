@@ -143,7 +143,7 @@ data:
     # Cloudflare
     $wgUseCdn = true;
     $wgUsePrivateIPs = true;
-    $wgCdnMaxAge = $wgParserCacheExpireTime;
+    $wgCdnMaxAge = 86400;
     $wgCdnServersNoPurge = [
       '10.0.0.0/8',
       '173.245.48.0/20',
@@ -633,6 +633,11 @@ data:
         include mime.types;
         default_type application/octet-stream;
 
+        map "$upstream_status:$upstream_http_cache_control" $thumbnail_cache_control {
+            default $upstream_http_cache_control;
+            "~*^(200|206|304):(?!.*(?:private|no-cache|no-store))" "public, max-age=0, s-maxage=86400, must-revalidate, no-transform";
+        }
+
         log_format main_res '$remote_addr - $remote_user [$time_local] "$request" '
         '$status $body_bytes_sent "$http_referer" '
         '"$http_user_agent" "$http_x_forwarded_for" '
@@ -735,6 +740,16 @@ data:
                 fastcgi_pass unix:/var/run/php-fpm.sock;
             }
 
+            location = /thumb.php {
+                try_files $uri =404;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME $document_root/thumb.php;
+                fastcgi_param HTTPS on;
+                fastcgi_hide_header Cache-Control;
+                add_header Cache-Control $thumbnail_cache_control always;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+
             location /rest.php {
                 try_files $uri $uri/ /rest.php?$args;
                 include fastcgi_params;
@@ -764,9 +779,9 @@ data:
                     expires 7d;
                     add_header Cache-Control "public, no-transform";
                     location ~ ^/images/thumb/(webp/)?(archive/)?[0-9a-f]/[0-9a-f][0-9a-f]/([^/]+)/([0-9]+)px-.*$ {
-                        expires 2h;
+                        expires off;
                         add_header 'Access-Control-Allow-Origin' 'gbf.wiki' always;
-                        add_header Cache-Control "public, no-transform";
+                        add_header Cache-Control "public, max-age=0, s-maxage=86400, must-revalidate, no-transform";
                         add_header X-XSS-Protection "1; mode=block";
                         try_files $uri $uri/ @thumb;
                     }
