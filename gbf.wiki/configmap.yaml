@@ -547,45 +547,59 @@ data:
     $wgNamespacesWithSubpages[7001] = true;
     $wgNamespacesWithSubpages[8001] = true;
 
-    # permissions
+    # autoconfirm rights
+    $wgAutoConfirmAge = 600;
+    $wgAutoConfirmCount = 0;
+    $autoconfirmedOnlyRights = [
+        'edit',
+        'createpage',
+        'createtalk',
+        'createwithcontentmodel',
+        'move',
+        'move-subpages',
+        'move-rootuserpages',
+        'move-categorypages',
+        'movefile',
+        'upload',
+        'reupload',
+        'reupload-shared',
+        'minoredit',
+        'applychangetags',
+        'changetags',
+        'editmyusercss',
+        'editmyuserjs',
+        'editmyuserjson',
+        'editmyuserjsredirect',
+        'sendemail',
+    ];
+
+    foreach ( $autoconfirmedOnlyRights as $right ) {
+        $wgGroupPermissions['*'][$right] = false;
+        $wgGroupPermissions['user'][$right] = false;
+        $wgGroupPermissions['temp'][$right] = false;
+        $wgGroupPermissions['autoconfirmed'][$right] = true;
+    }
+    unset( $autoconfirmedOnlyRights, $right );
+
+    # editors
     $wgGroupPermissions['editors']['editprotected'] = true;
     $wgGroupPermissions['editors']['editinterface'] = true;
     $wgGroupPermissions['editors']['editcontentmodel'] = true;
-    $wgGroupPermissions['sysop']['deletelogentry'] = true;
-    $wgGroupPermissions['sysop']['deleterevision'] = true;
-    $wgGroupPermissions['anime']['editsemiprotected'] = true;
-    # disable edit with api unless you're confirmed
-    # let's not auto confirm way too early
-    $wgAutoConfirmAge = 600;
-    $wgAutoConfirmCount = 0;
-    # let's revoke create page for user and guest
-    $wgGroupPermissions['*']['edit'] = false;
-    $wgGroupPermissions['*']['createpage'] = false;
-    $wgGroupPermissions['*']['createtalk'] = false;
-    $wgGroupPermissions['*']['move'] = false;
-    $wgGroupPermissions['*']['reupload'] = false;
-    $wgGroupPermissions['*']['upload'] = false;
-    $wgGroupPermissions['user']['createpage'] = false;
-    $wgGroupPermissions['user']['createtalk'] = false;
-    $wgGroupPermissions['user']['writeapi'] = false;
-    $wgGroupPermissions['user']['move'] = false;
-    $wgGroupPermissions['user']['reupload'] = false;
-    $wgGroupPermissions['user']['upload'] = false;
-    # autoconfirmed is allowed to create pages
-    $wgGroupPermissions['autoconfirmed']['createpage'] = true;
-    $wgGroupPermissions['autoconfirmed']['createtalk'] = true;
-    $wgGroupPermissions['autoconfirmed']['writeapi'] = true;
-    $wgGroupPermissions['autoconfirmed']['move'] = true;
-    $wgGroupPermissions['autoconfirmed']['reupload'] = true;
-    $wgGroupPermissions['autoconfirmed']['upload'] = true;
+
+    # patrolling
     $wgGroupPermissions['patrollers']['patrol'] = true;
     $wgGroupPermissions['patrollers']['autopatrol'] = true;
-    $wgGroupPermissions['sysop']['upload_by_url'] = true;
     $wgGroupPermissions['autopatrolled']['autopatrol'] = true;
-    # restrict module namespaces
+
+    # sysops
+    $wgGroupPermissions['sysop']['deletelogentry'] = true;
+    $wgGroupPermissions['sysop']['deleterevision'] = true;
+    $wgGroupPermissions['sysop']['upload_by_url'] = true;
+
+    $wgAvailableRights[] = 'editmodules';
     $wgGroupPermissions['moduleeditor']['editmodules'] = true;
     $wgGroupPermissions['sysop']['editmodules'] = true;
-    $wgNamespaceProtection[828] = ['editmodules'];
+    $wgNamespaceProtection[828] = [ 'editmodules' ];
 
     wfLoadExtension( 'DarkMode' );
     wfLoadExtension( 'RandomSelection' );
