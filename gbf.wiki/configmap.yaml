@@ -550,6 +550,7 @@ data:
     # permissions
     $wgGroupPermissions['editors']['editprotected'] = true;
     $wgGroupPermissions['editors']['editinterface'] = true;
+    $wgGroupPermissions['editors']['editcontentmodel'] = true;
     $wgGroupPermissions['sysop']['deletelogentry'] = true;
     $wgGroupPermissions['sysop']['deleterevision'] = true;
     $wgGroupPermissions['anime']['editsemiprotected'] = true;
