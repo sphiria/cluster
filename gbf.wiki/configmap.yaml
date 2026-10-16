@@ -40,8 +40,7 @@ data:
     $wgUrlProtocols = array('http://', 'https://', '//');
     $wgMainPageIsDomainRoot = true;
     $wgForceHTTPS = true;
-    $wgCookieSameSite = 'Lax';
-    $wgCookieSecure = true;
+
 
     # assets
     $wgLogos = [
@@ -80,6 +79,14 @@ data:
 
     # Secret key
     $wgSecretKey = getenv('MW_SECRET_KEY');
+
+    # cookies
+    $wgCookieSameSite = 'Lax';
+    $wgCookieSecure = true;
+    $wgJwtPrivateKey = getenv('MW_JWT_PRIVATE_KEY');
+    $wgJwtPublicKey = getenv('MW_JWT_PUBLIC_KEY');
+    $wgUseSessionCookieJwt = true;
+    $wgCookieDomain = '';
 
     # Changing this will log out all existing sessions.
     $wgAuthenticationTokenVersion = "1";

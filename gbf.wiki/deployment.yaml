@@ -163,6 +163,16 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: turnstile_secret_key
+          - name: MW_JWT_PRIVATE_KEY
+            valueFrom:
+              secretKeyRef:
+                name: nier-secrets
+                key: jwt_private_key
+          - name: MW_JWT_PUBLIC_KEY
+            valueFrom:
+              secretKeyRef:
+                name: nier-secrets
+                key: jwt_public_key
       volumes:
       - name: nier-config-volume
         configMap:
@@ -285,6 +295,16 @@ spec:
                 secretKeyRef:
                   name: nier-secrets
                   key: turnstile_secret_key
+            - name: MW_JWT_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: jwt_private_key
+            - name: MW_JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nier-secrets
+                  key: jwt_public_key
             volumeMounts:
             - name: nier-config-volume
               mountPath: /var/www/html/LocalSettings.php
@@ -407,6 +427,16 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: turnstile_secret_key
+        - name: MW_JWT_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: jwt_private_key
+        - name: MW_JWT_PUBLIC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: nier-secrets
+              key: jwt_public_key
         volumeMounts:
         - name: nier-config-volume
           mountPath: /var/www/html/LocalSettings.php
