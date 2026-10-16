@@ -167,12 +167,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: nier-secrets
-              key: jwt_private_key
+              key: jwt-private.pem
         - name: MW_JWT_PUBLIC_KEY
           valueFrom:
             secretKeyRef:
               name: nier-secrets
-              key: jwt_public_key
+              key: jwt-public.pem
       volumes:
       - name: nier-config-volume
         configMap:
@@ -299,12 +299,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: nier-secrets
-                  key: jwt_private_key
+                  key: jwt-private.pem
             - name: MW_JWT_PUBLIC_KEY
               valueFrom:
                 secretKeyRef:
                   name: nier-secrets
-                  key: jwt_public_key
+                  key: jwt-public.pem
             volumeMounts:
             - name: nier-config-volume
               mountPath: /var/www/html/LocalSettings.php
@@ -431,12 +431,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: nier-secrets
-              key: jwt_private_key
+              key: jwt-private.pem
         - name: MW_JWT_PUBLIC_KEY
           valueFrom:
             secretKeyRef:
               name: nier-secrets
-              key: jwt_public_key
+              key: jwt-public.pem
         volumeMounts:
         - name: nier-config-volume
           mountPath: /var/www/html/LocalSettings.php
