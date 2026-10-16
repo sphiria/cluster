@@ -83,9 +83,9 @@ data:
     # cookies
     $wgCookieSameSite = 'Lax';
     $wgCookieSecure = true;
-    $wgJwtPrivateKey = getenv('MW_JWT_PRIVATE_KEY');
-    $wgJwtPublicKey = getenv('MW_JWT_PUBLIC_KEY');
-    $wgUseSessionCookieJwt = true;
+    #$wgJwtPrivateKey = getenv('MW_JWT_PRIVATE_KEY');
+    #$wgJwtPublicKey = getenv('MW_JWT_PUBLIC_KEY');
+    #$wgUseSessionCookieJwt = true;
     $wgCookieDomain = '';
 
     # Changing this will log out all existing sessions.
