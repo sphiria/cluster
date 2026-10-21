@@ -23,7 +23,7 @@ spec:
           automountServiceAccountToken: false
           containers:
           - name: jobchron
-            image: ghcr.io/sphiria/yuisis:v1.1.25
+            image: ghcr.io/sphiria/yuisis:v1.1.26
             imagePullPolicy: Always
             securityContext:
               runAsNonRoot: true
