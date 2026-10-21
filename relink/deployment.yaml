@@ -16,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app: ilsa
-  replicas: 0
+  replicas: 1
   template:
     metadata:
       labels:
@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: ilsa
-        image: ghcr.io/sphiria/yuisis:v1.1.10
+        image: ghcr.io/sphiria/yuisis:v1.1.24
         imagePullPolicy: Always
         resources:
           limits:
@@ -133,7 +133,7 @@ metadata:
     app: ilsa-jobrunner
 spec:
   revisionHistoryLimit: 3
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: ilsa-jobrunner
@@ -144,7 +144,7 @@ spec:
     spec:
       containers:
       - name: jobrunner
-        image: ghcr.io/sphiria/yuisis:v1.1.10
+        image: ghcr.io/sphiria/yuisis:v1.1.24
         imagePullPolicy: Always
         workingDir: /var/www/html
         command:
