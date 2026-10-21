@@ -60,7 +60,7 @@ spec:
     spec:
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.24
+        image: ghcr.io/sphiria/yuisis:v1.1.25
         imagePullPolicy: Always
         resources:
           limits:
@@ -204,7 +204,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: search-suggester
-            image: ghcr.io/sphiria/yuisis:v1.1.24
+            image: ghcr.io/sphiria/yuisis:v1.1.25
             imagePullPolicy: Always
             workingDir: /var/www/html
             command:
@@ -333,7 +333,7 @@ spec:
     spec:
       containers:
       - name: jobrunner
-        image: ghcr.io/sphiria/yuisis:v1.1.24
+        image: ghcr.io/sphiria/yuisis:v1.1.25
         imagePullPolicy: Always
         workingDir: /var/www/html
         command:
