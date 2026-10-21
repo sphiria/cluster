@@ -16,16 +16,26 @@ spec:
   selector:
     matchLabels:
       app: ilsa
-  replicas: 1
+  replicas: 0
   template:
     metadata:
       labels:
         app: ilsa
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: ilsa
         image: ghcr.io/sphiria/yuisis:v1.1.25
         imagePullPolicy: Always
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+          runAsGroup: 65534
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
         resources:
           limits:
             memory: "8Gi"
@@ -133,7 +143,7 @@ metadata:
     app: ilsa-jobrunner
 spec:
   revisionHistoryLimit: 3
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: ilsa-jobrunner
@@ -142,10 +152,20 @@ spec:
       labels:
         app: ilsa-jobrunner
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: jobrunner
         image: ghcr.io/sphiria/yuisis:v1.1.25
         imagePullPolicy: Always
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65534
+          runAsGroup: 65534
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
         workingDir: /var/www/html
         command:
         - /bin/sh
