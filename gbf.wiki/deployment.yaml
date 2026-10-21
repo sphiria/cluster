@@ -65,6 +65,8 @@ spec:
         imagePullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         resources:
           limits:
             memory: "12Gi"
@@ -212,6 +214,8 @@ spec:
             imagePullPolicy: Always
             securityContext:
               allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
             workingDir: /var/www/html
             command:
             - php84
@@ -344,6 +348,8 @@ spec:
         imagePullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         workingDir: /var/www/html
         command:
         - /bin/sh
