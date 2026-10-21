@@ -70,6 +70,8 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
         resources:
           limits:
             memory: "12Gi"
@@ -222,6 +224,8 @@ spec:
               allowPrivilegeEscalation: false
               capabilities:
                 drop: ["ALL"]
+              seccompProfile:
+                type: RuntimeDefault
             workingDir: /var/www/html
             command:
             - php84
@@ -359,6 +363,8 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
         workingDir: /var/www/html
         command:
         - /bin/sh

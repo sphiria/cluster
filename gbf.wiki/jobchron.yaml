@@ -32,6 +32,8 @@ spec:
               allowPrivilegeEscalation: false
               capabilities:
                 drop: ["ALL"]
+              seccompProfile:
+                type: RuntimeDefault
             command: ["php84", "-d", "memory_limit=256M", "/opt/jobchron/run.php"]
             resources:
               requests:
