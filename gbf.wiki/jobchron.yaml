@@ -26,6 +26,9 @@ spec:
             image: ghcr.io/sphiria/yuisis:v1.1.25
             imagePullPolicy: Always
             securityContext:
+              runAsNonRoot: true
+              runAsUser: 65534
+              runAsGroup: 65534
               allowPrivilegeEscalation: false
               capabilities:
                 drop: ["ALL"]
