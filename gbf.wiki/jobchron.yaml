@@ -25,6 +25,8 @@ spec:
           - name: jobchron
             image: ghcr.io/sphiria/yuisis:v1.1.25
             imagePullPolicy: Always
+            securityContext:
+              allowPrivilegeEscalation: false
             command: ["php84", "-d", "memory_limit=256M", "/opt/jobchron/run.php"]
             resources:
               requests:

@@ -63,6 +63,8 @@ spec:
       - name: nier
         image: ghcr.io/sphiria/yuisis:v1.1.25
         imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
         resources:
           limits:
             memory: "12Gi"
@@ -208,6 +210,8 @@ spec:
           - name: search-suggester
             image: ghcr.io/sphiria/yuisis:v1.1.25
             imagePullPolicy: Always
+            securityContext:
+              allowPrivilegeEscalation: false
             workingDir: /var/www/html
             command:
             - php84
@@ -338,6 +342,8 @@ spec:
       - name: jobrunner
         image: ghcr.io/sphiria/yuisis:v1.1.25
         imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
         workingDir: /var/www/html
         command:
         - /bin/sh
