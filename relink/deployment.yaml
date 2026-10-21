@@ -16,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app: ilsa
-  replicas: 1
+  replicas: 0
   template:
     metadata:
       labels:
@@ -133,7 +133,7 @@ metadata:
     app: ilsa-jobrunner
 spec:
   revisionHistoryLimit: 3
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: ilsa-jobrunner
