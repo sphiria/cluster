@@ -30,6 +30,7 @@ data:
     tcp-keepalive 300
     slowlog-log-slower-than 10000
     slowlog-max-len 128
+    aclfile /etc/valkey-acl/users.acl
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -53,14 +54,60 @@ spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 120
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+      - name: render-acl
+        image: valkey/valkey:9.0.6-alpine
+        command:
+        - sh
+        - -ec
+        - |
+          mediawiki_hash="$(printf '%s' "$MEDIAWIKI_PASSWORD" | sha256sum)"
+          mediawiki_hash="${mediawiki_hash%% *}"
+          exporter_hash="$(printf '%s' "$EXPORTER_PASSWORD" | sha256sum)"
+          exporter_hash="${exporter_hash%% *}"
+          printf '%s\n' \
+            'user default on nopass ~* &* +@all' \
+            "user mediawiki on #${mediawiki_hash} ~* &* +@all -@admin -@dangerous +eval +evalsha +script|load +script|exists" \
+            "user exporter on #${exporter_hash} ~* &* +@all -@write -@admin -@dangerous +config|get +client|setname +client|list +info +slowlog|get +slowlog|len +latency|latest +latency|history +memory|stats +memory|usage +scan +type +strlen +llen +scard +zcard +hlen +xlen +pfcount +eval" \
+            > /acl/users.acl
+          chmod 0400 /acl/users.acl
+        env:
+        - name: MEDIAWIKI_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: mediawiki_password
+        - name: EXPORTER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: exporter_password
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: acl
+          mountPath: /acl
       containers:
       - name: valkey
         image: valkey/valkey:9.0.6-alpine
         args: ["valkey-server", "/usr/local/etc/valkey/valkey.conf"]
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         ports:
         - containerPort: 6379
           name: valkey
@@ -70,6 +117,9 @@ spec:
           readOnly: true
         - name: data
           mountPath: /data
+        - name: acl
+          mountPath: /etc/valkey-acl
+          readOnly: true
         resources:
           limits:
             memory: "5Gi"
@@ -105,6 +155,9 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: valkey-data
+      - name: acl
+        emptyDir:
+          medium: Memory
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
