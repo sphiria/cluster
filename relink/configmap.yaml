@@ -666,31 +666,54 @@ data:
                 fastcgi_pass unix:/var/run/php-fpm.sock;
             }
 
-            location /rest.php {
-                try_files $uri $uri/ /rest.php?$args;
+            location ~ ^/index\.php(?<index_path_info>/.*)?$ {
+                try_files /index.php =404;
                 include fastcgi_params;
-                fastcgi_param SCRIPT_FILENAME    $document_root/rest.php;
+                fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+                fastcgi_param SCRIPT_NAME /index.php;
+                fastcgi_param PATH_INFO $index_path_info;
                 fastcgi_param HTTPS on;
                 fastcgi_pass unix:/var/run/php-fpm.sock;
             }
 
+            location ~ ^/(?:api|load|opensearch_desc|thumb)\.php$ {
+                try_files $uri =404;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                fastcgi_param HTTPS on;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+
+            location ~ ^/rest\.php(?<rest_path_info>/.*)?$ {
+                try_files /rest.php =404;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME    $document_root/rest.php;
+                fastcgi_param SCRIPT_NAME /rest.php;
+                fastcgi_param PATH_INFO $rest_path_info;
+                fastcgi_param HTTPS on;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+
+            location ~ ^/thumb_handler\.php(?<thumb_path_info>/.*)?$ {
+                try_files /thumb_handler.php =404;
+                include fastcgi_params;
+                fastcgi_param SCRIPT_FILENAME $document_root/thumb_handler.php;
+                fastcgi_param SCRIPT_NAME /thumb_handler.php;
+                fastcgi_param PATH_INFO $thumb_path_info;
+                fastcgi_param HTTPS on;
+                fastcgi_pass unix:/var/run/php-fpm.sock;
+            }
+
+            location ~ \.php(?:/|$) {
+                return 404;
+            }
+
             location / {
                 try_files $uri $uri/ @mediawiki;
-                location ~ \.php$ {
-                    try_files $uri $uri/ =404;
-                    include fastcgi_params;
-                    fastcgi_pass unix:/var/run/php-fpm.sock;
-                    fastcgi_param HTTPS on;
-                    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                }
             }
 
             location ~ ^/Images/(.*) {
                 return 301 /images/$1;
-            }
-
-            location ~* /(?:docs|extensions|includes|cache|languages|maintenance|mw-config|serialized|skins|tests|vendor|images)/.*.php$ {
-                deny all;
             }
 
             location ~ /.(svn|git|.ht)(/|$) {
