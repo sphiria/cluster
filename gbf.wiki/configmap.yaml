@@ -115,7 +115,7 @@ data:
     }
     $wgHooks['SpecialPage_initList'][] = 'removeExportSpecial';
     $wgHooks['SpecialPageAfterExecute'][] = static function ( $special, $subPage ) {
-        if ( $special->getName() !== 'Version' ) {
+        if ( $special->getName() !== 'Version' || $special->getUser()->isRegistered() ) {
             return true;
         }
 
