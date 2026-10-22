@@ -61,7 +61,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: nier
-        image: ghcr.io/sphiria/yuisis:v1.1.26
+        image: ghcr.io/sphiria/yuisis:v1.1.28-hardened-malloc
         imagePullPolicy: Always
         securityContext:
           runAsNonRoot: true
@@ -215,7 +215,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: search-suggester
-            image: ghcr.io/sphiria/yuisis:v1.1.26
+            image: ghcr.io/sphiria/yuisis:v1.1.28-hardened-malloc
             imagePullPolicy: Always
             securityContext:
               runAsNonRoot: true
@@ -354,7 +354,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: jobrunner
-        image: ghcr.io/sphiria/yuisis:v1.1.26
+        image: ghcr.io/sphiria/yuisis:v1.1.28-hardened-malloc
         imagePullPolicy: Always
         securityContext:
           runAsNonRoot: true
