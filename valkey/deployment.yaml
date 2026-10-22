@@ -75,7 +75,7 @@ spec:
           printf '%s\n' \
             'user default on nopass ~* &* +@all' \
             "user mediawiki on #${mediawiki_hash} ~* &* +@all -@admin -@dangerous +eval +evalsha +script|load +script|exists" \
-            "user exporter on #${exporter_hash} ~* &* +@all -@write -@admin -@dangerous +config|get +client|setname +client|list +info +slowlog|get +slowlog|len +latency|latest +latency|history +memory|stats +memory|usage +scan +type +strlen +llen +scard +zcard +hlen +xlen +pfcount +eval" \
+            "user exporter on #${exporter_hash} ~* &* +@all -@write -@admin -@dangerous +config|get +client|setname +client|list +info +slowlog|get +slowlog|len +latency|latest +latency|history +latency|histogram +commandlog|get +commandlog|len +memory|stats +memory|usage +scan +type +strlen +llen +scard +zcard +hlen +xlen +pfcount +eval" \
             > /acl/users.acl
           chmod 0400 /acl/users.acl
         env:
