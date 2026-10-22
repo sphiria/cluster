@@ -174,13 +174,10 @@ dex:
 configs:
   cm:
     url: https://argocd.sphiria.org
-    users.anonymous.enabled: "true"
+    admin.enabled: "true"
+    users.anonymous.enabled: "false"
   rbac:
-    policy.csv: |
-      # Grant admin role to users from Cloudflare Access header
-      g, role:admin, role:admin
-      p, role:admin, *, *, *, allow
-    policy.default: role:admin
-    scopes: '[email]'
+    policy.default: role:readonly
+    scopes: '[groups, email]'
   params:
     server.insecure: true
