@@ -110,10 +110,24 @@ data:
     # special pages
     function removeExportSpecial(&$aSpecialPages)
     {
-        unset($aSpecialPages['Export'], $aSpecialPages['Version']);
+        unset($aSpecialPages['Export']);
         return true;
     }
     $wgHooks['SpecialPage_initList'][] = 'removeExportSpecial';
+    $wgHooks['SpecialPageAfterExecute'][] = static function ( $special, $subPage ) {
+        if ( $special->getName() !== 'Version' ) {
+            return true;
+        }
+
+        $out = $special->getOutput();
+        $html = preg_replace( [
+            '~<h2\b[^>]*\bid="mw-version-software"[^>]*>.*?</h2>\s*<table\b[^>]*\bid="sv-software"[^>]*>.*?</table>~s',
+            '~<li\b[^>]*>\s*<a\b[^>]*href="#mw-version-software"[^>]*>.*?</a>\s*</li>~s',
+        ], '', $out->getHTML() );
+        $out->clearHTML();
+        $out->addHTML( $html );
+        return true;
+    };
 
     # cache
     $wgObjectCaches['valkey'] = array(
@@ -643,6 +657,7 @@ data:
     decorate_workers_output = no
     ping.path = /fpm-ping
     listen.backlog = 65536
+    session.upload_progress.enabled = 0
 
   nginx.conf: |
     worker_processes auto;
