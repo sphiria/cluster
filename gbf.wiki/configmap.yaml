@@ -107,10 +107,10 @@ data:
     $wgMaxShellMemory = 607200;
     $wgNativeImageLazyLoading = true;
 
-    # Remove export page
+    # special pages
     function removeExportSpecial(&$aSpecialPages)
     {
-        unset($aSpecialPages['Export']);
+        unset($aSpecialPages['Export'], $aSpecialPages['Version']);
         return true;
     }
     $wgHooks['SpecialPage_initList'][] = 'removeExportSpecial';
@@ -753,6 +753,14 @@ data:
 
             root /var/www/html;
             index index.php;
+
+            location ^~ /vendor/ {
+                return 404;
+            }
+
+            location ~* /(?:composer(?:\.[^/]+)?\.(?:json|lock)|(?:extension|skin)\.json)$ {
+                return 404;
+            }
 
             location /robots.txt {
                 alias /var/www/html/robots.txt;
