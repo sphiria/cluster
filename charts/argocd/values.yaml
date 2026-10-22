@@ -169,6 +169,9 @@ redis:
       enabled: true
       additionalLabels:
         release: kube-prometheus-stack
+redisSecretInit:
+  jobAnnotations:
+    argocd.argoproj.io/hook: Skip
 dex:
   enabled: false
 configs:
