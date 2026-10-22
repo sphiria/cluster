@@ -548,7 +548,6 @@ data:
     decorate_workers_output = no
     ping.path = /fpm-ping
     listen.backlog = 65536
-    session.upload_progress.enabled = 0
 
   nginx.conf: |
     worker_processes auto;

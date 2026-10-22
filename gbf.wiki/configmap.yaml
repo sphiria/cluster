@@ -107,7 +107,7 @@ data:
     $wgMaxShellMemory = 607200;
     $wgNativeImageLazyLoading = true;
 
-    # special pages
+    # i love being special
     function removeExportSpecial(&$aSpecialPages)
     {
         unset($aSpecialPages['Export']);
@@ -122,10 +122,25 @@ data:
         $out = $special->getOutput();
         $html = preg_replace( [
             '~<h2\b[^>]*\bid="mw-version-software"[^>]*>.*?</h2>\s*<table\b[^>]*\bid="sv-software"[^>]*>.*?</table>~s',
-            '~<li\b[^>]*>\s*<a\b[^>]*href="#mw-version-software"[^>]*>.*?</a>\s*</li>~s',
+            '~<h2\b[^>]*\bid="mw-version-libraries"[^>]*>.*?(?=<h2\b|$)~s',
+            '~<li\b[^>]*>\s*<a\b[^>]*href="#mw-version-(?:software|libraries(?:-(?:server|client))?)"[^>]*>.*?</a>\s*(?:<ul\b[^>]*>.*?</ul>\s*)?</li>~s',
         ], '', $out->getHTML() );
         $out->clearHTML();
         $out->addHTML( $html );
+        return true;
+    };
+    $wgHooks['APIAfterExecute'][] = static function ( $module ) {
+        if ( $module->getModuleName() !== 'query' || $module->getMain()->isInternalMode() ) {
+            return true;
+        }
+
+        $result = $module->getResult();
+        foreach ( [ 'phpversion', 'phpsapi', 'dbtype', 'dbversion' ] as $field ) {
+            $result->removeValue( [ 'query', 'general' ], $field );
+        }
+        foreach ( [ 'libraries', 'clientlibraries', 'showhooks' ] as $field ) {
+            $result->removeValue( 'query', $field );
+        }
         return true;
     };
 
@@ -767,6 +782,16 @@ data:
 
             root /var/www/html;
             index index.php;
+
+            error_page 400 401 403 404 405 408 409 411 412 413 414 415 416 421 429
+                       494 495 496 497 500 501 502 503 504 505 507 /_request_error;
+
+            location = /_request_error {
+                internal;
+                types { }
+                default_type text/html;
+                return 200 "<!doctype html><title>Request failed</title><p>Request failed.</p>\n";
+            }
 
             location ^~ /vendor/ {
                 return 404;
