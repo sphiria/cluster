@@ -73,9 +73,9 @@ spec:
           exporter_hash="$(printf '%s' "$EXPORTER_PASSWORD" | sha256sum)"
           exporter_hash="${exporter_hash%% *}"
           printf '%s\n' \
-            'user default on nopass ~* &* +@all' \
+            'user default off resetpass resetkeys resetchannels -@all' \
             "user mediawiki on #${mediawiki_hash} ~* &* +@all -@admin -@dangerous +eval +evalsha +script|load +script|exists" \
-            "user exporter on #${exporter_hash} ~* &* +@all -@write -@admin -@dangerous +config|get +client|setname +client|list +info +slowlog|get +slowlog|len +latency|latest +latency|history +latency|histogram +commandlog|get +commandlog|len +memory|stats +memory|usage +scan +type +strlen +llen +scard +zcard +hlen +xlen +pfcount +eval" \
+            "user exporter on #${exporter_hash} ~* &* +@all -@write -@admin -@dangerous +ping +config|get +client|setname +client|list +acl|log +info +slowlog|get +slowlog|len +latency|latest +latency|history +latency|histogram +commandlog|get +commandlog|len +memory|stats +memory|usage +scan +type +strlen +llen +scard +zcard +hlen +xlen +pfcount +eval" \
             > /acl/users.acl
           chmod 0400 /acl/users.acl
         env:
@@ -102,6 +102,12 @@ spec:
       - name: valkey
         image: valkey/valkey:9.0.6-alpine
         args: ["valkey-server", "/usr/local/etc/valkey/valkey.conf"]
+        env:
+        - name: VALKEYCLI_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: exporter_password
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -130,22 +136,25 @@ spec:
         startupProbe:
           exec:
             command:
-            - valkey-cli
-            - ping
+            - sh
+            - -ec
+            - valkey-cli --user exporter ping | grep -qx PONG
           periodSeconds: 5
           failureThreshold: 60
         livenessProbe:
           exec:
             command:
-            - valkey-cli
-            - ping
+            - sh
+            - -ec
+            - valkey-cli --user exporter ping | grep -qx PONG
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           exec:
             command:
-            - valkey-cli
-            - ping
+            - sh
+            - -ec
+            - valkey-cli --user exporter ping | grep -qx PONG
           initialDelaySeconds: 5
           periodSeconds: 5
       volumes:
