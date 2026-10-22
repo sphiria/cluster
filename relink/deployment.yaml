@@ -100,6 +100,11 @@ spec:
             secretKeyRef:
               name: ilsa-secrets
               key: redis-host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: mediawiki_password
         - name: AWS_S3_KEY
           valueFrom:
             secretKeyRef:
@@ -223,6 +228,11 @@ spec:
             secretKeyRef:
               name: ilsa-secrets
               key: redis-host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: mediawiki_password
         - name: AWS_S3_KEY
           valueFrom:
             secretKeyRef:

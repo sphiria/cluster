@@ -238,6 +238,13 @@ spec:
         env:
         - name: REDIS_ADDR
           value: "valkey-service:6379"
+        - name: REDIS_USER
+          value: exporter
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: exporter_password
         resources:
           requests:
             cpu: 100m

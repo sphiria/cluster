@@ -23,7 +23,7 @@ spec:
           automountServiceAccountToken: false
           containers:
           - name: jobchron
-            image: ghcr.io/sphiria/yuisis:v1.1.28-hardened-malloc
+            image: ghcr.io/sphiria/yuisis:v1.1.30-hardened-malloc
             imagePullPolicy: Always
             securityContext:
               runAsNonRoot: true
@@ -48,3 +48,10 @@ spec:
                 secretKeyRef:
                   name: nier-secrets
                   key: redis_host
+            - name: REDIS_USERNAME
+              value: mediawiki
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: valkey-secrets
+                  key: mediawiki_password

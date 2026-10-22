@@ -143,6 +143,11 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: redis_host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: mediawiki_password
         - name: ES_HOST
           valueFrom:
             secretKeyRef:
@@ -285,6 +290,11 @@ spec:
                 secretKeyRef:
                   name: nier-secrets
                   key: redis_host
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: valkey-secrets
+                  key: mediawiki_password
             - name: ES_HOST
               valueFrom:
                 secretKeyRef:
@@ -427,6 +437,11 @@ spec:
             secretKeyRef:
               name: nier-secrets
               key: redis_host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: valkey-secrets
+              key: mediawiki_password
         - name: ES_HOST
           valueFrom:
             secretKeyRef:

@@ -82,6 +82,7 @@ data:
     $wgObjectCaches['valkey'] = array(
       'class' => 'RedisBagOStuff',
       'servers' => array(getenv('REDIS_HOST')),
+      'password' => array('mediawiki', getenv('REDIS_PASSWORD')),
       'persistent' => true,
     );
     $wgMainStash = 'valkey';
@@ -102,7 +103,9 @@ data:
     $wgJobTypeConf['default'] = [
       'class' => \MediaWiki\JobQueue\JobQueueRedis::class,
       'redisServer' => getenv('REDIS_HOST'),
-      'redisConfig' => [],
+      'redisConfig' => [
+        'password' => [ 'mediawiki', getenv('REDIS_PASSWORD') ],
+      ],
       'daemonized' => true,
     ];
 
