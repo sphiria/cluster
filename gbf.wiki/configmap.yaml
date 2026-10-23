@@ -550,6 +550,7 @@ data:
 
     # AdvancedSearch
     wfLoadExtension('AdvancedSearch');
+    $wgAdvancedSearchDeepcatEnabled = false;
 
     # EmbedVideo
     wfLoadExtension("EmbedVideo");
