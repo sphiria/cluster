@@ -647,6 +647,7 @@ data:
             server_name relink.gbf.wiki;
             sendfile off;
             absolute_redirect off;
+            http2 off;
 
             root /var/www/html;
             index index.php;
